@@ -19,6 +19,7 @@
 package com.guntherdw.bukkit.tweakcraft.Commands.Essentials;
 
 import com.guntherdw.bukkit.tweakcraft.Commands.iCommand;
+import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PunishEntry;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.CommandException;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.CommandSenderException;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.CommandUsageException;
@@ -62,6 +63,9 @@ public class CommandKick implements iCommand {
 
             }
             player.kickPlayer(kicker+": "+reason);
+            PunishEntry entry = new PunishEntry();
+            entry.set("KICK", sender.getName(), player.getName(), 0, reason);
+            plugin.getDatabase().save(entry);
         }
 
         return true;

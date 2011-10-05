@@ -21,6 +21,7 @@ package com.guntherdw.bukkit.tweakcraft.Listeners;
 import com.guntherdw.bukkit.tweakcraft.Chat.ChatHandler;
 import com.guntherdw.bukkit.tweakcraft.Chat.ChatMode;
 import com.guntherdw.bukkit.tweakcraft.DataSources.Ban.BanHandler;
+import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerData;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerHistoryInfo;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerInfo;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerOptions;
@@ -252,7 +253,32 @@ public class TweakcraftPlayerListener extends PlayerListener {
         player.setDisplayName(displayName);
         if(ldisplayname.length()<16)
             player.setListName(ldisplayname);
-
+        if(player.getDisplayName().length() < 16) {
+        	try {
+        		player.setPlayerListName(player.getDisplayName());
+        	} catch (Exception e) { }
+    	}
+        char[] chars = name.toCharArray();
+        boolean changed = false;
+        for(int i = 0; i < name.length();i++) {
+        	if(chars[i] == '^' && chars.length > (i+1)) {
+        		switch(chars[i + 1]) {
+        			case '0': case '1': case '2': case '3':
+        			case '4': case '5': case '6': case '7':
+        			case '8': case '9': case 'a': case 'b':
+        			case 'c': case 'd': case 'e': case 'f':
+        			case 'A': case 'B': case 'C': case 'D':
+        			case 'E': case 'F':
+        				chars[i] = '\u00A7';
+        				changed = true;
+        				i++;
+        			break;
+        		}
+        	}
+        }
+        if(changed) message = new String(chars);
+        
+        
         ChatHandler ch = plugin.getChathandler();
         ChatMode cm = ch.getPlayerChatMode(player);
 
@@ -261,6 +287,13 @@ public class TweakcraftPlayerListener extends PlayerListener {
             plugin.getLogger().info("[TweakcraftUtils] Muted player message : <" + event.getPlayer().getName() + "> " + event.getMessage());
             event.setCancelled(true);
             return;
+        }
+        PlayerData data = plugin.getPlayerData(player);
+        if(data.isMuted()) {
+        	player.sendMessage(ChatColor.GOLD + data.muteToString());
+        	plugin.getLogger().info("[TweakcraftUtils] Muted player message : <" + event.getPlayer().getName() + "> " + event.getMessage());
+        	event.setCancelled(true);
+        	return;
         } else {
 
             if(plugin.getConfigHandler().enableSpamControl) {
@@ -364,11 +397,21 @@ public class TweakcraftPlayerListener extends PlayerListener {
 
 
     public void onPlayerLogin(PlayerLoginEvent event) {
+    	PlayerData data = plugin.getPlayerData(event.getPlayer());
+    	
+    	if(data.isBanned()) {
+    		event.disallow(PlayerLoginEvent.Result.KICK_BANNED, data.banToString());
+    		return;
+    	}
+    	
         BanHandler handler = plugin.getBanhandler();
         Ban isBanned = handler.isBannedBan(event.getPlayer().getName());
         if (isBanned!=null) {
             event.disallow(PlayerLoginEvent.Result.KICK_BANNED, isBanned.getReason());
+            return;
         }
+        
+        PlayerData.onLogin(plugin, event.getPlayer(), data);
     }
 
 
@@ -431,6 +474,7 @@ public class TweakcraftPlayerListener extends PlayerListener {
 
         String name = event.getPlayer().getName();
 
+        
         if (plugin.getConfigHandler().enableSeenConfig) {
             Calendar cal = Calendar.getInstance();
             if(!plugin.getConfigHandler().enablePersistence) {
@@ -488,6 +532,9 @@ public class TweakcraftPlayerListener extends PlayerListener {
                 }
             }
         }
+        
+        PlayerData data = plugin.getPlayerData(event.getPlayer());
+        PlayerData.onLogout(plugin, event.getPlayer(), data);
     }
 
     /**

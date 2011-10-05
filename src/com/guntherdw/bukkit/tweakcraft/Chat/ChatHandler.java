@@ -44,7 +44,6 @@ public class ChatHandler {
         chatmodes.clear();
         chatmodes.put("admin",  new AdminChat(this)); /* This one has a higher priority! */
         chatmodes.put("local",  new LocalChat(this));
-        chatmodes.put("region", new RegionChat(this));
         chatmodes.put("zones",  new ZoneChat(this));
         chatmodes.put("world",  new WorldChat(this));
     }

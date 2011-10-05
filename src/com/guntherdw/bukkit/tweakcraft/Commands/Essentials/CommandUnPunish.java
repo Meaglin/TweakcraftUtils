@@ -33,23 +33,23 @@ import org.bukkit.entity.Player;
 /**
  * @author GuntherDW
  */
-public class CommandUnban implements iCommand {
+public class CommandUnPunish implements iCommand {
     public boolean executeCommand(CommandSender sender, String command, String[] args, TweakcraftUtils plugin)
             throws PermissionsException, CommandSenderException, CommandUsageException, CommandException {
         if (sender instanceof Player)
-            if (!plugin.check((Player) sender, "ban"))
+            if (!plugin.check((Player) sender, "punish"))
                 throw new PermissionsException(command);
         
         if (args.length < 1)
-            throw new CommandUsageException(ChatColor.YELLOW + "I need at least 1 name to unban!");
+            throw new CommandUsageException(ChatColor.YELLOW + "I need at least 1 name to unpunish!");
         
         PlayerData data = plugin.getPlayerData(args[0]);
         
         if(data == null)
         	throw new CommandUsageException("Cannot find player with name " + args[0] + "!");
         
-        if(!data.isBanned()) 
-        	throw new CommandUsageException("Player " + data.getName() + " is not banned!");
+        if(!data.isDemoted()) 
+        	throw new CommandUsageException("Player " + data.getName() + " is not punnished!");
         
         
         String reason = "no reason";
@@ -62,12 +62,22 @@ public class CommandUnban implements iCommand {
         }
         
         PunishEntry entry = new PunishEntry();
-        entry.set("UNBAN", sender.getName(), data.getName(), data.getBantime() - System.currentTimeMillis(), reason);
+        entry.set("UNPUNISH", sender.getName(), data.getName(), data.getDemotetime() - System.currentTimeMillis(), reason);
         plugin.getDatabase().save(entry);
-        data.setBantime(0);
+        plugin.getPermissionHandler().getUserObject("world", data.getName()).removeParent(plugin.getPermissionHandler().getGroupObject("world", "outcast"));
+		plugin.getPermissionHandler().getUserObject("world", data.getName()).addParent(plugin.getPermissionHandler().getGroupObject("world", data.getOldrank()));
+		data.setDemotetime(0);
+		data.setLastrank(data.getOldrank());
+		data.setOldrank("");        
+        
         plugin.getDatabase().update(data);
-        plugin.getLogger().info("[TweakcraftUtils] " + sender.getName() + " is unbanning " + data.getName() + " with reason: " + reason);
-        sender.sendMessage(ChatColor.GREEN + data.getName() + " is now unbanned!");
+        plugin.getLogger().info("[TweakcraftUtils] " + sender.getName() + " is unpunnishing " + data.getName() + " with reason: " + reason);
+        
+        Player player = plugin.getServer().getPlayer(data.getName());
+        if(player != null) {
+        	player.sendMessage(ChatColor.GREEN + "You are not outcast anymore!");
+        }
+        sender.sendMessage(ChatColor.GREEN + data.getName() + " is not outcast anymore!");
         /*
         BanHandler handler = plugin.getBanhandler();
         if (args.length > 0) {
@@ -87,6 +97,6 @@ public class CommandUnban implements iCommand {
 
     @Override
     public String getPermissionSuffix() {
-        return "ban";
+        return "punish";
     }
 }

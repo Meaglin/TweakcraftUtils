@@ -26,9 +26,11 @@ import com.guntherdw.bukkit.tweakcraft.Commands.CommandHandler;
 import com.guntherdw.bukkit.tweakcraft.Commands.iCommand;
 import com.guntherdw.bukkit.tweakcraft.Configuration.ConfigurationHandler;
 import com.guntherdw.bukkit.tweakcraft.DataSources.Ban.BanHandler;
+import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerData;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerHistoryInfo;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerInfo;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerOptions;
+import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PunishEntry;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.*;
 import com.guntherdw.bukkit.tweakcraft.Listeners.TweakcraftEntityListener;
 import com.guntherdw.bukkit.tweakcraft.Listeners.TweakcraftPlayerListener;
@@ -40,13 +42,14 @@ import com.guntherdw.bukkit.tweakcraft.Tools.PermissionsResolver;
 import com.guntherdw.bukkit.tweakcraft.Tools.TamerTool;
 import com.guntherdw.bukkit.tweakcraft.Util.TeleportHistory;
 import com.guntherdw.bukkit.tweakcraft.Worlds.WorldManager;
+import com.guntherdw.bukkit.tweakcraft.request.RequestHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.zones.Zones;
 import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.Event.Priority;
@@ -71,7 +74,6 @@ import java.util.logging.Logger;
 public class TweakcraftUtils extends JavaPlugin {
 
     protected Permissions perm = null;
-    protected WorldGuardPlugin wg = null;
     protected CraftIRC circ = null;
     protected Zones zones = null;
     // protected PermissionHandler ph = null;
@@ -87,8 +89,11 @@ public class TweakcraftUtils extends JavaPlugin {
     private final TeleportHistory telehistory = new TeleportHistory(this);
     private final TamerTool tamertool = new TamerTool(this);
     private final ChatHandler chathandler = new ChatHandler(this);
+    
     private final PermissionsResolver permsResolver = new PermissionsResolver(this);
-
+    private final HashMap<String, PlayerData> playerdata = new HashMap<String, PlayerData>();
+    private final RequestHandler requestHandler = new RequestHandler(this);
+    
     private Object circendpoint = null;
     private Object circadminendpoint = null;
 
@@ -143,14 +148,14 @@ public class TweakcraftUtils extends JavaPlugin {
     public void sendToolDuraMode(Player player) {
         if(getConfigHandler().enablemod_InfDura && mod_InfDuraplayers.contains(player))
         {
-            player.sendRawMessage(ToolDuraPattern+player.getWorld().getToolDurability());
+            player.sendRawMessage(ToolDuraPattern+((CraftWorld)player.getWorld()).getDurability());
         }
     }
 
     public void sendToolDuraMode(Player player, World to) {
             if(getConfigHandler().enablemod_InfDura && mod_InfDuraplayers.contains(player))
             {
-                player.sendRawMessage(ToolDuraPattern+to.getToolDurability());
+                player.sendRawMessage(ToolDuraPattern+((CraftWorld)to).getDurability());
             }
         }
     
@@ -237,6 +242,8 @@ public class TweakcraftUtils extends JavaPlugin {
         list.add(PlayerInfo.class);
         list.add(PlayerHistoryInfo.class);
         list.add(PlayerOptions.class);
+        list.add(PlayerData.class);
+        list.add(PunishEntry.class);
         return list;
     }
 
@@ -244,6 +251,8 @@ public class TweakcraftUtils extends JavaPlugin {
          try {
              getDatabase().find(PlayerInfo.class).findRowCount();
              getDatabase().find(PlayerOptions.class).findRowCount();
+             getDatabase().find(PlayerData.class).findRowCount();
+             getDatabase().find(PunishEntry.class).findRowCount();
              if(configHandler.useTweakBotSeen)
                  getDatabase().find(PlayerHistoryInfo.class).findRowCount();
          } catch (PersistenceException ex) {
@@ -334,7 +343,6 @@ public class TweakcraftUtils extends JavaPlugin {
         getServer().getPluginManager().registerEvent(Event.Type.EXPLOSION_PRIME,        entityListener, Priority.Normal, this);
         getServer().getPluginManager().registerEvent(Event.Type.ENTITY_DEATH,           entityListener, Priority.Normal, this);
         getServer().getPluginManager().registerEvent(Event.Type.CHUNK_UNLOAD,           worldListener , Priority.Normal, this);
-
     }
 
     public TweakcraftWorldListener getWorldListener() {
@@ -353,10 +361,16 @@ public class TweakcraftUtils extends JavaPlugin {
         return circ;
     }
 
-    public WorldGuardPlugin getWorldGuard() {
-        return wg;
+    public String getPlayerColor(String world, String name) {
+    	String pref = "�f";
+        try {
+            pref = ph.getUserPrefix(world, name).replace("&", "�");
+        } catch (NullPointerException e) {
+            pref = "�f";
+        }
+        return pref;
     }
-
+    
     public String getPlayerColor(String playername, boolean change) {
         String pref = "";
         Player p = null;
@@ -364,7 +378,7 @@ public class TweakcraftUtils extends JavaPlugin {
             p = this.getServer().getPlayer(playername);
             pref = this.getPermissionsResolver().getUserPrefix(p.getWorld().getName(), p);
         } catch (NullPointerException e) {
-            pref = "§f";
+            pref = "�f";
         }
         String col = ChatColor.WHITE.toString();
         if (p == null) col = ChatColor.AQUA + "[NC] " + pref;
@@ -411,22 +425,6 @@ public class TweakcraftUtils extends JavaPlugin {
         }
     }
 
-    public void setupWorldGuard() {
-        if(this.getConfigHandler().enableWorldGuard) {
-            Plugin plugin = this.getServer().getPluginManager().getPlugin("WorldGuard");
-
-            if (wg == null) {
-                if (plugin != null) {
-                    wg = (WorldGuardPlugin) plugin;
-                } else {
-                    this.getConfigHandler().enableWorldGuard = false;
-                    this.getLogger().warning("[TweakcraftUtils] WARNING: Couldn't find WorldGuard, but is enabled in the config.");
-                    this.getLogger().warning("[TweakcraftUtils] WARNING: Disabling WorldGuard support.");
-                }
-            }
-        }
-    }
-
     public void setupZones() {
         if(this.getConfigHandler().enableZones) {
             Plugin plugin = this.getServer().getPluginManager().getPlugin("Zones");
@@ -454,7 +452,7 @@ public class TweakcraftUtils extends JavaPlugin {
             BufferedReader motdfilereader = new BufferedReader(new FileReader(motdfile));
             String line = "";
             while ((line = motdfilereader.readLine()) != null) {
-                MOTDLines.add(line.replace('&', '§'));
+                MOTDLines.add(line.replace('&', '�'));
             }
             motdfilereader.close();
         } catch (FileNotFoundException e) {
@@ -469,6 +467,11 @@ public class TweakcraftUtils extends JavaPlugin {
         return commandHandler;
     }
 
+    public String getNickWithColors(String world, String player) {
+    	String nick = playerListener.getNick(player);
+    	return getPlayerColor(world, player) + (nick == null ? player : nick) + ChatColor.WHITE;
+    }
+    
     public String getNickWithColors(String player) {
         String nick = playerListener.getNick(player);
         String realname = player;
@@ -511,7 +514,6 @@ public class TweakcraftUtils extends JavaPlugin {
         this.cuiPlayers = new ArrayList<Player>();
         this.mod_InfDuraplayers = new ArrayList<Player>();
         
-        this.setupWorldGuard();
         this.setupCraftIRC();
         this.setupZones();
 
@@ -530,6 +532,11 @@ public class TweakcraftUtils extends JavaPlugin {
         /* itemDB.writeDB(); */
 
         playerListener.reloadInvisTable();
+        
+        for(Player player : getServer().getOnlinePlayers()) {
+        	PlayerData.onLogin(this, player, getPlayerData(player));
+        }
+        
         log.info("[" + pdfFile.getName() + "] " + pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!");
     }
     
@@ -546,6 +553,9 @@ public class TweakcraftUtils extends JavaPlugin {
     }
 
     public void onDisable() {
+    	for(Player player : getServer().getOnlinePlayers()) {
+        	PlayerData.onLogout(this, player, getPlayerData(player));
+        }
         log.info("["+pdfFile.getName()+"] Shutting down!");
         // this.getDatabase().
     }
@@ -616,5 +626,42 @@ public class TweakcraftUtils extends JavaPlugin {
             }
         }
         return false;
+    }
+    
+    public PlayerData getPlayerData(String name) {
+    	PlayerData data = playerdata.get(name);
+    	if(data == null) {
+	    	data = getDatabase().find(PlayerData.class).where().ieq("name", name+"%").findUnique();
+    	}
+    	
+    	return data;
+    }
+    
+    public PlayerData getPlayerData(Player player, boolean create) {
+    	PlayerData data = playerdata.get(player.getName().toLowerCase());
+    	if(data == null) {
+	    	data = getDatabase().find(PlayerData.class).where().eq("name", player.getName()).findUnique();
+	    	if(data == null && create) {
+	    		data = new PlayerData();
+	    		player.setDisplayName(getNickWithColors(player.getName()));
+	    		data.init(player.getName(), player.getDisplayName(), (ph != null ? ph.getPrimaryGroup("world", player.getName()): "Default"));
+	    		getDatabase().save(data);
+	    	}
+	    	if( data != null) playerdata.put(player.getName().toLowerCase(), data);
+    	}
+    	
+    	return data;
+    }
+    
+    public PlayerData getPlayerData(Player player) {
+    	return getPlayerData(player, true);
+    }
+    
+    public void removeData(Player player) {
+    	playerdata.remove(player.getName().toLowerCase());
+    }
+    
+    public RequestHandler getRequestHandler() {
+    	return requestHandler;
     }
 }

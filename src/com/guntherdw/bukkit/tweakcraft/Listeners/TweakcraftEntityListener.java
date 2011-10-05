@@ -46,15 +46,7 @@ public class TweakcraftEntityListener extends EntityListener {
     } */
 
     public void onEntityCombust(EntityCombustEvent event) {
-        Entity ent = event.getEntity();
-        if(ent instanceof Player) {
-            Player player = (Player) ent;
-            if(plugin.getWorldGuard()!=null) {
-                if(plugin.getConfigHandler().stopIgniteWorldGuard && plugin.getWorldGuard().getGlobalConfiguration().hasGodMode(player)) {
-                    event.setCancelled(true);
-                }
-            }
-        }
+        
     }
 
     public void onEntityDeath(EntityDeathEvent event) {

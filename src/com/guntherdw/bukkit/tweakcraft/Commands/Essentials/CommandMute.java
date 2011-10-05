@@ -18,14 +18,14 @@
 
 package com.guntherdw.bukkit.tweakcraft.Commands.Essentials;
 
-import com.guntherdw.bukkit.tweakcraft.Chat.ChatHandler;
 import com.guntherdw.bukkit.tweakcraft.Commands.iCommand;
+import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerData;
+import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PunishEntry;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.CommandException;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.CommandSenderException;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.CommandUsageException;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.PermissionsException;
 import com.guntherdw.bukkit.tweakcraft.TweakcraftUtils;
-import com.guntherdw.bukkit.tweakcraft.Util.TimeTool;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -39,6 +39,72 @@ public class CommandMute implements iCommand {
         if (sender instanceof Player)
             if (!plugin.check((Player) sender, "mute"))
                 throw new PermissionsException(command);
+        
+        if (args.length < 1)
+            throw new CommandUsageException(ChatColor.YELLOW + "I need at least 1 name to mute!");
+        
+        PlayerData data = plugin.getPlayerData(args[0]);
+        
+        if(data == null)
+        	throw new CommandUsageException("Cannot find player with name " + args[0] + "!");
+        
+        if(data.isMuted()) 
+        	throw new CommandUsageException("Player " + data.getName() + " is already muted!");
+        
+        if(args.length > 1 && args.length < 3)
+        	throw new CommandUsageException("Usage: /mute [player] <sec|min|hours|days> <amount> <reason>");
+        
+        long time = -1;
+        if(args.length > 1) {
+        	int factor = 1;
+        	String arg = args[1].toLowerCase();
+        	if(arg.startsWith("sec")) factor = 1;
+        	else if(arg.startsWith("min")) factor = 60;
+        	else if(arg.startsWith("hour")) factor = 60 * 60;
+        	else if(arg.startsWith("day")) factor = 60 * 60 * 24;
+        	else {
+        		throw new CommandUsageException("Usage: /mute [player] <sec|min|hours|days> <amount> <reason>");
+        	}
+        	int amount = 0;
+        	try {
+        		amount = Integer.parseInt(args[2]);
+        	} catch(NumberFormatException e) {
+        		throw new CommandUsageException("Usage: /mute [player] <sec|min|hours|days> <amount> <reason>");
+        	}
+        	//if(amount <= 0)
+        	//	throw new CommandUsageException("Invalid time amount!");
+        	
+        	time = amount * factor * 1000;
+        	if(time < 0) time = -1;
+        }
+        String reason = "no reason";
+        if(args.length > 3) {
+        	reason = "";
+        	for(int i = 3;i < args.length;i++) {
+        		reason += " " + args[i];
+        	}
+        	if(!reason.equals(""))reason = reason.substring(1);
+        }
+        
+        if(time != -1){
+        	data.setMutetime(time + System.currentTimeMillis());
+        	sender.sendMessage(ChatColor.GREEN + "Player " + data.getName() + " is now muted for " + PlayerData.formatRemaining((int) (time/1000)) + " with reason: " + reason + " !");
+        	plugin.getLogger().info("[TweakcraftUtils] " + sender.getName() + " has muted " + data.getName() + " for " + PlayerData.formatRemaining((int) (time/1000)) + " with reason: " + reason + " !");
+        }
+        else {
+        	data.setMutetime(-1);
+        	sender.sendMessage(ChatColor.GREEN + "Player " + data.getName() + " is now Permanently muted with reason: " + reason + " !");
+        	plugin.getLogger().info("[TweakcraftUtils] " + sender.getName() + " has muted " + data.getName() + " with reason: " + reason + " !");
+        }
+        Player player = plugin.getServer().getPlayer(data.getName());
+        if(player != null) {
+        	player.sendMessage(ChatColor.RED + "You are now muted" + (time > 0 ? " for " + PlayerData.formatRemaining((int) (time/1000)) : "") + " with reason: " + reason + "!");
+        }
+        plugin.getDatabase().update(data);
+        PunishEntry entry = new PunishEntry();
+        entry.set("MUTE", sender.getName(), data.getName(), time, reason);
+        plugin.getDatabase().save(entry);
+        /*
         Long dura = null;
         String toFull = null;
         ChatHandler ch = plugin.getChathandler();
@@ -79,7 +145,7 @@ public class CommandMute implements iCommand {
         } else {
             sender.sendMessage(ChatColor.YELLOW + "Now who on earth do i have to mute?");
         }
-
+         */
         return true;
     }
 

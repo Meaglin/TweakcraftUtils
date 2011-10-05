@@ -209,5 +209,35 @@ commands:
     usage: /<command>
     aliases: [dnm,nomount]
   viewdistance:
-    desciption: ViewDistance control!
+    description: ViewDistance control!
     usage: /<command> [p:<player>] [distance]
+  unmute:
+    description: Unmute a player.
+    usage: /<command> [player] <reason>
+  punish:
+    description: Punish a player.
+    usage: /<command> [Player] <days|hours|min|sec> <amount> <reason>
+  unpunish:
+    description: Unpunish a player.
+    usage: /<command> [Player] <reason>
+  warn:
+    description: Warn a player
+    usage: /<command> <player> <message> 
+  tpc:
+    description: Tpc a player
+    usage: /<command> [player]
+  tpchere:
+    description: TpcHere a player
+    usage: /<command> [player] 
+  accept:
+    description: Accepts a request.
+    usage: /<command>
+    aliases: [ tpca ]
+  decline:
+    description: Declines a request.
+    usage: /<command>
+    aliases: [ tpcd ]
+  stack:
+    description: Stacks inventory items.
+    usage: /<command>
+    aliases: [ ';' ]

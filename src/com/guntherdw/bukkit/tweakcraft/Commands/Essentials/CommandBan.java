@@ -18,14 +18,14 @@
 
 package com.guntherdw.bukkit.tweakcraft.Commands.Essentials;
 
-import com.guntherdw.bukkit.tweakcraft.DataSources.Ban.BanHandler;
+import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerData;
+import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PunishEntry;
 import com.guntherdw.bukkit.tweakcraft.Commands.iCommand;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.CommandException;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.CommandSenderException;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.CommandUsageException;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.PermissionsException;
 import com.guntherdw.bukkit.tweakcraft.TweakcraftUtils;
-import com.guntherdw.bukkit.tweakcraft.Util.TimeTool;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -39,7 +39,73 @@ public class CommandBan implements iCommand {
         if (sender instanceof Player)
             if (!plugin.check((Player) sender, "ban"))
                 throw new PermissionsException(command);
-        BanHandler handler = plugin.getBanhandler();
+        
+        if (args.length < 1)
+            throw new CommandUsageException(ChatColor.YELLOW + "I need at least 1 name to ban!");
+        
+        PlayerData data = plugin.getPlayerData(args[0]);
+        
+        if(data == null)
+        	throw new CommandUsageException("Cannot find player with name " + args[0] + "!");
+        
+        if(data.isBanned()) 
+        	throw new CommandUsageException("Player " + data.getName() + " is already banned!");
+        
+        if(args.length > 1 && args.length < 3)
+        	throw new CommandUsageException("Usage: /ban [player] <sec|min|hours|days> <amount> <reason>");
+        
+        long time = -1;
+        if(args.length > 1) {
+        	int factor = 1;
+        	String arg = args[1].toLowerCase();
+        	if(arg.startsWith("sec")) factor = 1;
+        	else if(arg.startsWith("min")) factor = 60;
+        	else if(arg.startsWith("hour")) factor = 60 * 60;
+        	else if(arg.startsWith("day")) factor = 60 * 60 * 24;
+        	else {
+        		throw new CommandUsageException("Usage: /ban [player] <sec|min|hours|days> <amount> <reason>");
+        	}
+        	int amount = 0;
+        	try {
+        		amount = Integer.parseInt(args[2]);
+        	} catch(NumberFormatException e) {
+        		throw new CommandUsageException("Usage: /ban [player] <sec|min|hours|days> <amount> <reason>");
+        	}
+        	//if(amount <= 0)
+        	//	throw new CommandUsageException("Invalid time amount!");
+        	
+        	time = amount * factor * 1000;
+        	if(time < 0) time = -1;
+        }
+        String reason = "no reason";
+        if(args.length > 3) {
+        	reason = "";
+        	for(int i = 3;i < args.length;i++) {
+        		reason += " " + args[i];
+        	}
+        	if(!reason.equals(""))reason = reason.substring(1);
+        }
+        
+        if(time != -1){
+        	data.setBantime(time + System.currentTimeMillis());
+        	sender.sendMessage(ChatColor.GREEN + "Player " + data.getName() + " is now banned for " + PlayerData.formatRemaining((int) (time/1000)) + " with reason: " + reason + " !");
+        	plugin.getLogger().info("[TweakcraftUtils] " + sender.getName() + " has banned " + data.getName() + " for " + PlayerData.formatRemaining((int) (time/1000)) + " with reason: " + reason + " !");
+        }
+        else {
+        	data.setBantime(-1);
+        	sender.sendMessage(ChatColor.GREEN + "Player " + data.getName() + " is now Permanently banned with reason: " + reason + " !");
+        	plugin.getLogger().info("[TweakcraftUtils] " + sender.getName() + " has banned " + data.getName() + " with reason: " + reason + " !");
+        }
+        Player player = plugin.getServer().getPlayer(data.getName());
+        if(player != null) {
+        	player.kickPlayer("You are now banned" + (time > 0 ? " for " + PlayerData.formatRemaining((int) (time/1000)) : "") + " with reason: " + reason + "!");
+        }
+        plugin.getDatabase().update(data);
+        PunishEntry entry = new PunishEntry();
+        entry.set("BAN", sender.getName(), data.getName(), time, reason);
+        plugin.getDatabase().save(entry);
+        
+        /* BanHandler handler = plugin.getBanhandler();
         if (args.length < 1)
             throw new CommandUsageException(ChatColor.YELLOW + "I need at least 1 name to ban!");
         if (handler.isBanned(args[0])) {
@@ -79,7 +145,7 @@ public class CommandBan implements iCommand {
             }
             plugin.getLogger().info("[TweakcraftUtils] Banning " + playername + "!");
             handler.saveBans();
-        }
+        } */
         return true;
     }
 

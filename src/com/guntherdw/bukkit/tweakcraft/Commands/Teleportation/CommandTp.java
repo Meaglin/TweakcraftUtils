@@ -83,8 +83,6 @@ public class CommandTp implements iCommand {
                             override = true;
                         } else {
                             override = false;
-                            /* if(refusetp)
-                         override = true; */
                         }
 
                         if(!player.getWorld().getName().equals(p.getWorld().getName())) {

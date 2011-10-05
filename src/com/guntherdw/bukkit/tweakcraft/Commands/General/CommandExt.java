@@ -63,6 +63,8 @@ public class CommandExt implements iCommand {
             if (sender instanceof Player) {
                 Player player = (Player) sender;
                 if(!plugin.check(player, "ext.self"))
+                	throw new PermissionsException(command);
+                
                 if (player.getFireTicks() != 0) {
                     player.setFireTicks(0);
                     player.sendMessage(ChatColor.YELLOW + "You have been extinguished!");

@@ -20,6 +20,7 @@ package com.guntherdw.bukkit.tweakcraft.Worlds;
 
 import org.bukkit.World;
 import org.bukkit.util.config.Configuration;
+import org.bukkit.craftbukkit.CraftWorld;
 
 import java.io.File;
 import java.io.IOException;
@@ -123,7 +124,7 @@ public class TweakWorld implements IWorld {
     
     public void setDurabilityEnabled(boolean state) {
         if(wm.getPlugin().getConfigHandler().enablemod_InfDura)
-            world.setToolDurability(state);
+            ((CraftWorld) world).setDurability(state);
         else {
             wm.getPlugin().getLogger().severe("[TweakcraftUtils] Tried to enable/disable tool durability for world "+world.getName()+",");
             wm.getPlugin().getLogger().severe("[TweakcraftUtils] But either your Bukkit is not modded, or you forgot to enable it in the config!");
@@ -132,7 +133,7 @@ public class TweakWorld implements IWorld {
     }
 
     public boolean isDurabilityEnabled() {
-        return world.getToolDurability();
+        return ((CraftWorld)world).getDurability();
     }
 
     public boolean isNetherEnabled() {
@@ -210,13 +211,15 @@ public class TweakWorld implements IWorld {
     }
 
     public void addNether() {
+    	if(!enabled)return;
+    	
         World nw = wm.getPlugin().getServer().getWorld(this.world.getName()+"_nether");
         if(nw == null)
         {
             nw = wm.getPlugin().getServer().createWorld(this.world.getName()+"_nether", World.Environment.NETHER);
         }
         nw.setSpawnFlags(this.allowmonsters, this.allowanimals);
-        nw.setToolDurability(this.tooldurability);
+        ((CraftWorld)nw).setDurability(this.tooldurability);
         this.netherenabled = true;
         this.nether = nw;
     }

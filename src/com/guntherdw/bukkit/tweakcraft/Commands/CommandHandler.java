@@ -76,36 +76,41 @@ public class CommandHandler {
         commandMap.put("mute", new CommandMute());
         commandMap.put("motd", new CommandMotd());
         commandMap.put("plugin", new CommandPlugin());
+        commandMap.put("punish", new CommandPunish());
         commandMap.put("reply", new CommandReply());
         commandMap.put("spawn", new CommandSpawn());
         commandMap.put("setspawn", new CommandSetSpawn());
         commandMap.put("spawnmob", new CommandSpawnmob());
         commandMap.put("time", new CommandTime());
         commandMap.put("unban", new CommandUnban());
-        commandMap.put("world", new CommandWorld());
+        commandMap.put("unmute", new CommandUnMute());
+        commandMap.put("unpunish", new CommandUnPunish());
+        commandMap.put("warn", new CommandWarn());
         commandMap.put("who", new CommandWho());
+        commandMap.put("world", new CommandWorld());
 
         /**
          * General commands
          */
-        commandMap.put("ext", new CommandExt());
-        commandMap.put("ignite", new CommandIgnite());
-        commandMap.put("seen", new CommandSeen());
+        commandMap.put("accept", new CommandAccept());
         commandMap.put("broadcast", new CommandBroadcast());
-        commandMap.put("tamer", new CommandTamer());
-        commandMap.put("nick", new CommandNick());
-        commandMap.put("lwho", new CommandLocalWho());
-        commandMap.put("whois", new CommandWhois());
+        commandMap.put("decline",  new CommandDecline());
         commandMap.put("donotmount", new CommandDoNotMount());
         commandMap.put("eject", new CommandEject());
+        commandMap.put("ext", new CommandExt());
         commandMap.put("getspawn", new CommandGetSpawn());
+        commandMap.put("ignite", new CommandIgnite());
+        commandMap.put("lwho", new CommandLocalWho());
+        commandMap.put("nick", new CommandNick());
+        commandMap.put("seen", new CommandSeen());
+        commandMap.put("stack", new CommandStack());
+        commandMap.put("tamer", new CommandTamer());
+        commandMap.put("whois", new CommandWhois());
 
         /**
          * Chat commands
          */
-
         commandMap.put("lc", new CommandLc());
-        commandMap.put("rc", new CommandRc());
         commandMap.put("wc", new CommandWc());
         commandMap.put("zc", new CommandZc());
         commandMap.put("chatmode", new CommandChatMode());
@@ -117,6 +122,8 @@ public class CommandHandler {
         commandMap.put("tele", new CommandTele());
         commandMap.put("tp", new CommandTp());
         commandMap.put("tpback", new CommandTPBack());
+        commandMap.put("tpc", new CommandTpc());
+        commandMap.put("tpchere", new CommandTpcHere());
         commandMap.put("tphere", new CommandTphere());
         commandMap.put("tpoff", new CommandTpOff());
         commandMap.put("tpon", new CommandTpOn());
@@ -133,7 +140,6 @@ public class CommandHandler {
         /**
          * Debug commands
          */
-
         commandMap.put("debug", new CommandDebug());
 
     }
