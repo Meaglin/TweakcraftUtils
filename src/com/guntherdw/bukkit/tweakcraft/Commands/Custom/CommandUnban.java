@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package com.guntherdw.bukkit.tweakcraft.Commands.Essentials;
+package com.guntherdw.bukkit.tweakcraft.Commands.Custom;
 
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerData;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PunishEntry;
@@ -33,23 +33,23 @@ import org.bukkit.entity.Player;
 /**
  * @author GuntherDW
  */
-public class CommandUnMute implements iCommand {
+public class CommandUnban implements iCommand {
     public boolean executeCommand(CommandSender sender, String command, String[] args, TweakcraftUtils plugin)
             throws PermissionsException, CommandSenderException, CommandUsageException, CommandException {
         if (sender instanceof Player)
-            if (!plugin.check((Player) sender, "mute"))
+            if (!plugin.check((Player) sender, "ban"))
                 throw new PermissionsException(command);
         
         if (args.length < 1)
-            throw new CommandUsageException(ChatColor.YELLOW + "I need at least 1 name to unmute!");
+            throw new CommandUsageException(ChatColor.YELLOW + "I need at least 1 name to unban!");
         
         PlayerData data = plugin.getPlayerData(args[0]);
         
         if(data == null)
         	throw new CommandUsageException("Cannot find player with name " + args[0] + "!");
         
-        if(!data.isMuted()) 
-        	throw new CommandUsageException("Player " + data.getName() + " is not muted!");
+        if(!data.isBanned()) 
+        	throw new CommandUsageException("Player " + data.getName() + " is not banned!");
         
         
         String reason = "no reason";
@@ -62,21 +62,31 @@ public class CommandUnMute implements iCommand {
         }
         
         PunishEntry entry = new PunishEntry();
-        entry.set("UNMUTE", sender.getName(), data.getName(), data.getMutetime() - System.currentTimeMillis(), reason);
+        entry.set("UNBAN", sender.getName(), data.getName(), data.getBantime() - System.currentTimeMillis(), reason);
         plugin.getDatabase().save(entry);
-        data.setMutetime(0);
+        data.setBantime(0);
         plugin.getDatabase().update(data);
-        plugin.getLogger().info("[TweakcraftUtils] " + sender.getName() + " is unmuting " + data.getName() + " with reason: " + reason);
-        Player player = plugin.getServer().getPlayer(data.getName());
-        if(player != null) {
-        	player.sendMessage(ChatColor.GREEN + "You are now unmuted!");
+        plugin.getLogger().info("[TweakcraftUtils] " + sender.getName() + " is unbanning " + data.getName() + " with reason: " + reason);
+        sender.sendMessage(ChatColor.GREEN + data.getName() + " is now unbanned!");
+        /*
+        BanHandler handler = plugin.getBanhandler();
+        if (args.length > 0) {
+            String target = args[0].toLowerCase();
+            if (handler.isBanned(target)) {
+                sender.sendMessage(ChatColor.YELLOW + "Unbanning player!");
+                handler.unBan(target);
+                handler.saveBans();
+            } else {
+                sender.sendMessage(ChatColor.YELLOW + "That player isn't banned!");
+            }
+
         }
-        sender.sendMessage(ChatColor.GREEN + data.getName() + " is now unmuted!");
+        */
         return true;
     }
 
     @Override
     public String getPermissionSuffix() {
-        return "mute";
+        return "ban";
     }
 }

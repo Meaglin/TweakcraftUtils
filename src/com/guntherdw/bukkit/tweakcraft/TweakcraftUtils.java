@@ -26,6 +26,7 @@ import com.guntherdw.bukkit.tweakcraft.Commands.CommandHandler;
 import com.guntherdw.bukkit.tweakcraft.Commands.iCommand;
 import com.guntherdw.bukkit.tweakcraft.Configuration.ConfigurationHandler;
 import com.guntherdw.bukkit.tweakcraft.DataSources.Ban.BanHandler;
+import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.Mail;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerData;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerHistoryInfo;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerInfo;
@@ -91,8 +92,10 @@ public class TweakcraftUtils extends JavaPlugin {
     private final ChatHandler chathandler = new ChatHandler(this);
     
     private final PermissionsResolver permsResolver = new PermissionsResolver(this);
+    
     private final HashMap<String, PlayerData> playerdata = new HashMap<String, PlayerData>();
     private final RequestHandler requestHandler = new RequestHandler(this);
+    private final com.zones.permissions.Permissions	zonePermsResolver = com.zones.permissions.PermissionsResolver.resolve(this);
     
     private Object circendpoint = null;
     private Object circadminendpoint = null;
@@ -105,9 +108,9 @@ public class TweakcraftUtils extends JavaPlugin {
     protected PluginDescriptionFile pdfFile = null;
 
     private List<Player> cuiPlayers;
-    public String CUIPattern = "§7§3§3§4";
+    public String CUIPattern = "\u00A77\u00A73\u00A73\u00A74";
     private List<Player> mod_InfDuraplayers;
-    public String ToolDuraPattern = "§1§1§1§1";
+    public String ToolDuraPattern = "\u00A71\u00A71\u00A71\u00A71";
 
 
     public File datafolder;
@@ -244,6 +247,7 @@ public class TweakcraftUtils extends JavaPlugin {
         list.add(PlayerOptions.class);
         list.add(PlayerData.class);
         list.add(PunishEntry.class);
+        list.add(Mail.class);
         return list;
     }
 
@@ -253,6 +257,7 @@ public class TweakcraftUtils extends JavaPlugin {
              getDatabase().find(PlayerOptions.class).findRowCount();
              getDatabase().find(PlayerData.class).findRowCount();
              getDatabase().find(PunishEntry.class).findRowCount();
+             getDatabase().find(Mail.class).findRowCount();
              if(configHandler.useTweakBotSeen)
                  getDatabase().find(PlayerHistoryInfo.class).findRowCount();
          } catch (PersistenceException ex) {
@@ -362,11 +367,11 @@ public class TweakcraftUtils extends JavaPlugin {
     }
 
     public String getPlayerColor(String world, String name) {
-    	String pref = "�f";
+    	String pref = "\u00A7f";
         try {
-            pref = ph.getUserPrefix(world, name).replace("&", "�");
+            pref = getPermissionsResolver().getUserPrefix(world, name).replace("&", "\u00A7");
         } catch (NullPointerException e) {
-            pref = "�f";
+            pref = "\u00A7f";
         }
         return pref;
     }
@@ -378,7 +383,7 @@ public class TweakcraftUtils extends JavaPlugin {
             p = this.getServer().getPlayer(playername);
             pref = this.getPermissionsResolver().getUserPrefix(p.getWorld().getName(), p);
         } catch (NullPointerException e) {
-            pref = "�f";
+            pref = "\u00A7f";
         }
         String col = ChatColor.WHITE.toString();
         if (p == null) col = ChatColor.AQUA + "[NC] " + pref;
@@ -452,7 +457,7 @@ public class TweakcraftUtils extends JavaPlugin {
             BufferedReader motdfilereader = new BufferedReader(new FileReader(motdfile));
             String line = "";
             while ((line = motdfilereader.readLine()) != null) {
-                MOTDLines.add(line.replace('&', '�'));
+                MOTDLines.add(line.replace('&', '\u00A7'));
             }
             motdfilereader.close();
         } catch (FileNotFoundException e) {
@@ -595,6 +600,9 @@ public class TweakcraftUtils extends JavaPlugin {
                     mess = args[0];
                 }
 
+                if(cmd.getName().equals("msg") || cmd.getName().equals("r"))
+                	return true;
+                	
                 if (sender instanceof Player)
                     log.info("[TweakcraftUtils] " + ((Player) sender).getName() + " issued: /" + cmd.getName() + " " + mess);
                 else
@@ -628,10 +636,14 @@ public class TweakcraftUtils extends JavaPlugin {
         return false;
     }
     
+    public com.zones.permissions.Permissions getP() {
+    	return zonePermsResolver;
+    }
+    
     public PlayerData getPlayerData(String name) {
     	PlayerData data = playerdata.get(name);
     	if(data == null) {
-	    	data = getDatabase().find(PlayerData.class).where().ieq("name", name+"%").findUnique();
+	    	data = getDatabase().find(PlayerData.class).where().like("name", name+"%").findUnique();
     	}
     	
     	return data;
@@ -644,7 +656,7 @@ public class TweakcraftUtils extends JavaPlugin {
 	    	if(data == null && create) {
 	    		data = new PlayerData();
 	    		player.setDisplayName(getNickWithColors(player.getName()));
-	    		data.init(player.getName(), player.getDisplayName(), (ph != null ? ph.getPrimaryGroup("world", player.getName()): "Default"));
+	    		data.init(player.getName(), player.getDisplayName(), (getP() != null ? getP().getGroup(player, "world"): "Default"));
 	    		getDatabase().save(data);
 	    	}
 	    	if( data != null) playerdata.put(player.getName().toLowerCase(), data);

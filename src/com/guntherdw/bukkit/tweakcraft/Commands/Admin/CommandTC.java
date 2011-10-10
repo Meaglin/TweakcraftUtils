@@ -68,7 +68,7 @@ public class CommandTC implements iCommand {
                     String ldisplayname = displayName.substring(0, displayName.length()-2);
                     p.setDisplayName(displayName);
                     if(ldisplayname.length()<16)
-                        p.setListName(ldisplayname);
+                        p.setPlayerListName(ldisplayname);
                 }
                 plugin.getPlayerListener().reloadInvisTable();
                 /**

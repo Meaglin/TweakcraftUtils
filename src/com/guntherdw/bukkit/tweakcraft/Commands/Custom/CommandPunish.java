@@ -1,4 +1,4 @@
-package com.guntherdw.bukkit.tweakcraft.Commands.Essentials;
+package com.guntherdw.bukkit.tweakcraft.Commands.Custom;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -79,8 +79,11 @@ public class CommandPunish implements iCommand {
 			plugin.getLogger().info("[TweakcraftUtils] " + sender.getName() + " has outcast " + data.getName() + " with reason: " + reason + " !");
 		}
 		data.setOldrank(data.getLastrank());
-		plugin.getPermissionHandler().getUserObject("world", data.getName()).removeParent(plugin.getPermissionHandler().getGroupObject("world", data.getLastrank()));
-		plugin.getPermissionHandler().getUserObject("world", data.getName()).addParent(plugin.getPermissionHandler().getGroupObject("world", "outcast"));
+		if(data.isOnline()) { data.update(plugin, false); }
+		plugin.getP().removeGroup("world", data.getName(), data.getLastrank());
+		plugin.getP().addGroup("world", data.getName(), "outcast");
+		//plugin.getPermissionHandler().getUserObject("world", data.getName()).removeParent(plugin.getPermissionHandler().getGroupObject("world", data.getLastrank()));
+		//plugin.getPermissionHandler().getUserObject("world", data.getName()).addParent(plugin.getPermissionHandler().getGroupObject("world", "outcast"));
 		Player player = plugin.getServer().getPlayer(data.getName());
 		if(player != null) {
 			player.sendMessage(ChatColor.RED + "You are now outcast" + (time > 0 ? " for " + PlayerData.formatRemaining((int) (time/1000)) : "") + " with reason: " + reason + "!");

@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package com.guntherdw.bukkit.tweakcraft.Commands.Essentials;
+package com.guntherdw.bukkit.tweakcraft.Commands.Custom;
 
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerData;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PunishEntry;
@@ -64,8 +64,10 @@ public class CommandUnPunish implements iCommand {
         PunishEntry entry = new PunishEntry();
         entry.set("UNPUNISH", sender.getName(), data.getName(), data.getDemotetime() - System.currentTimeMillis(), reason);
         plugin.getDatabase().save(entry);
-        plugin.getPermissionHandler().getUserObject("world", data.getName()).removeParent(plugin.getPermissionHandler().getGroupObject("world", "outcast"));
-		plugin.getPermissionHandler().getUserObject("world", data.getName()).addParent(plugin.getPermissionHandler().getGroupObject("world", data.getOldrank()));
+        plugin.getP().removeGroup(data.getName(), "world", "outcast");
+		plugin.getP().addGroup(data.getName(), "world", data.getOldrank());
+        //plugin.getPermissionHandler().getUserObject("world", data.getName()).removeParent(plugin.getPermissionHandler().getGroupObject("world", "outcast"));
+		//plugin.getPermissionHandler().getUserObject("world", data.getName()).addParent(plugin.getPermissionHandler().getGroupObject("world", data.getOldrank()));
 		data.setDemotetime(0);
 		data.setLastrank(data.getOldrank());
 		data.setOldrank("");        

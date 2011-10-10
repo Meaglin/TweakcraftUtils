@@ -20,6 +20,20 @@ package com.guntherdw.bukkit.tweakcraft.Commands;
 
 import com.guntherdw.bukkit.tweakcraft.Commands.Admin.*;
 import com.guntherdw.bukkit.tweakcraft.Commands.Chat.*;
+import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandAccept;
+import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandBan;
+import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandDecline;
+import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandMail;
+import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandMute;
+import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandPunish;
+import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandStack;
+import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandSurvival;
+import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandTpc;
+import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandTpcHere;
+import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandUnMute;
+import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandUnPunish;
+import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandUnban;
+import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandWarn;
 import com.guntherdw.bukkit.tweakcraft.Commands.Debug.CommandDebug;
 import com.guntherdw.bukkit.tweakcraft.Commands.Essentials.*;
 import com.guntherdw.bukkit.tweakcraft.Commands.General.*;
@@ -51,19 +65,18 @@ public class CommandHandler {
          */
         commandMap.put("admin", new CommandAdmin());
         commandMap.put("admin-add", new CommandAdminAdd());
-        commandMap.put("admin-remove", new CommandAdminRemove());
         commandMap.put("admin-list", new CommandAdminList());
-        commandMap.put("admon", new CommandAdmon());
+        commandMap.put("admin-remove", new CommandAdminRemove());
         commandMap.put("admoff", new CommandAdmoff());
-        commandMap.put("tplist", new CommandTpList());
-        commandMap.put("tweakcraft", new CommandTC());
+        commandMap.put("admon", new CommandAdmon());
         commandMap.put("clearinventory", new CommandClearInventory());
+        commandMap.put("tweakcraft", new CommandTC());
+        commandMap.put("tplist", new CommandTpList());
         commandMap.put("viewdistance", new CommandViewDistance());
 
         /**
          * Essential commands
          */
-        commandMap.put("ban", new CommandBan());
         commandMap.put("banlist", new CommandBanlist());
         commandMap.put("compass", new CommandCompass());
         commandMap.put("getpos", new CommandGetpos());
@@ -73,28 +86,20 @@ public class CommandHandler {
         commandMap.put("listworlds", new CommandListWorlds());
         commandMap.put("me", new CommandMe());
         commandMap.put("msg", new CommandMsg());
-        commandMap.put("mute", new CommandMute());
         commandMap.put("motd", new CommandMotd());
         commandMap.put("plugin", new CommandPlugin());
-        commandMap.put("punish", new CommandPunish());
         commandMap.put("reply", new CommandReply());
         commandMap.put("spawn", new CommandSpawn());
         commandMap.put("setspawn", new CommandSetSpawn());
         commandMap.put("spawnmob", new CommandSpawnmob());
         commandMap.put("time", new CommandTime());
-        commandMap.put("unban", new CommandUnban());
-        commandMap.put("unmute", new CommandUnMute());
-        commandMap.put("unpunish", new CommandUnPunish());
-        commandMap.put("warn", new CommandWarn());
         commandMap.put("who", new CommandWho());
         commandMap.put("world", new CommandWorld());
 
         /**
          * General commands
          */
-        commandMap.put("accept", new CommandAccept());
         commandMap.put("broadcast", new CommandBroadcast());
-        commandMap.put("decline",  new CommandDecline());
         commandMap.put("donotmount", new CommandDoNotMount());
         commandMap.put("eject", new CommandEject());
         commandMap.put("ext", new CommandExt());
@@ -103,7 +108,6 @@ public class CommandHandler {
         commandMap.put("lwho", new CommandLocalWho());
         commandMap.put("nick", new CommandNick());
         commandMap.put("seen", new CommandSeen());
-        commandMap.put("stack", new CommandStack());
         commandMap.put("tamer", new CommandTamer());
         commandMap.put("whois", new CommandWhois());
 
@@ -122,8 +126,6 @@ public class CommandHandler {
         commandMap.put("tele", new CommandTele());
         commandMap.put("tp", new CommandTp());
         commandMap.put("tpback", new CommandTPBack());
-        commandMap.put("tpc", new CommandTpc());
-        commandMap.put("tpchere", new CommandTpcHere());
         commandMap.put("tphere", new CommandTphere());
         commandMap.put("tpoff", new CommandTpOff());
         commandMap.put("tpon", new CommandTpOn());
@@ -141,7 +143,25 @@ public class CommandHandler {
          * Debug commands
          */
         commandMap.put("debug", new CommandDebug());
+        
+        /**
+         * Custom commands
+         */
 
+        commandMap.put("accept", 	new CommandAccept());
+        commandMap.put("ban", 		new CommandBan());
+        commandMap.put("decline",  	new CommandDecline());
+        commandMap.put("mail",		new CommandMail());
+        commandMap.put("mute", 		new CommandMute());
+        commandMap.put("punish", 	new CommandPunish());
+        commandMap.put("stack", 	new CommandStack());
+        commandMap.put("survival", 	new CommandSurvival());
+        commandMap.put("tpc", 		new CommandTpc());
+        commandMap.put("tpchere", 	new CommandTpcHere());
+        commandMap.put("unban", 	new CommandUnban());
+        commandMap.put("unmute", 	new CommandUnMute());
+        commandMap.put("unpunish", 	new CommandUnPunish());
+        commandMap.put("warn", 		new CommandWarn());
     }
 
     public TweakcraftUtils getPlugin() {

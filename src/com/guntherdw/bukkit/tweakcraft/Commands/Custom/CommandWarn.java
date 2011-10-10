@@ -1,4 +1,4 @@
-package com.guntherdw.bukkit.tweakcraft.Commands.Essentials;
+package com.guntherdw.bukkit.tweakcraft.Commands.Custom;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;

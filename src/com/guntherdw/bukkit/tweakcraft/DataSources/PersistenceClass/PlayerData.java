@@ -92,25 +92,45 @@ public class PlayerData {
         return getDemotetime() == -1;
 	}
 	
-	public static void onLogin(TweakcraftUtils plugin, Player player, PlayerData data) {
-		if (data.getDemotetime() != 0 && data.getDemotetime() > 0 && data.getDemotetime() <= System.currentTimeMillis()) {
-			plugin.getPermissionHandler().getUserObject("world", player.getName()).removeParent(plugin.getPermissionHandler().getGroupObject("world", "outcast"));
-			plugin.getPermissionHandler().getUserObject("world", player.getName()).addParent(plugin.getPermissionHandler().getGroupObject("world", data.getOldrank()));
-			data.setDemotetime(0);
-			data.setLastrank(data.getOldrank());
-			data.setOldrank("");
+
+    public void update(TweakcraftUtils plugin) {
+    	update(plugin, true);
+    }
+	public void update(TweakcraftUtils plugin, boolean save) {
+		Player player = plugin.getServer().getPlayerExact(getName());
+		if(player == null) return;
+		player.setDisplayName(plugin.getNickWithColors("world", player.getName()));
+		String displayname = player.getDisplayName().substring(0, player.getDisplayName().length()-2);
+		if(displayname.length() < 16) {
+        	try {
+        		player.setPlayerListName(displayname);
+        	} catch (Exception e) { }
+    	}
+		setDisplayname(player.getDisplayName());
+		
+		if (getDemotetime() != 0 && getDemotetime() > 0 && getDemotetime() <= System.currentTimeMillis()) {
+			plugin.getP().removeGroup(player, "world", "outcast");
+			plugin.getP().addGroup(player, "world", getOldrank());
+			setDemotetime(0);
+			setLastrank(getOldrank());
+			setOldrank("");
 			player.sendMessage(ChatColor.GREEN + "You are not outcast more!");
 		}
+		
+		setLastrank(plugin.getP().getGroup(player, "world"));
+		if(save) plugin.getDatabase().update(this);
+	}
+	
+	public static void onLogin(TweakcraftUtils plugin, Player player, PlayerData data) {
+		data.update(plugin, false);
 		
 		if(data.getDemotetime() > System.currentTimeMillis() || data.getDemotetime() == -1) {
 			int time = (int) Math.floor((data.getDemotetime() - System.currentTimeMillis())/1000);
 			player.sendMessage(ChatColor.GOLD + "You are outcast from this server" + (time > 0 ? " for another " + formatRemaining(time) : "") + "!");
 		}
-		player.setDisplayName(plugin.getNickWithColors("world", player.getName()));
+		
 		data.setOnline(true);
 		data.setLastlogin(System.currentTimeMillis());
-		data.setDisplayname(player.getDisplayName());
-		data.setLastrank(plugin.getPermissionHandler().getPrimaryGroup("world", data.getName()));
 		if(data.getMutetime() != -1 && data.getMutetime() < System.currentTimeMillis()) data.setMutetime(0);
 		if(data.getBantime() != -1 && data.getBantime() < System.currentTimeMillis()) data.setBantime(0);
 		plugin.getDatabase().update(data); 
@@ -349,4 +369,5 @@ public class PlayerData {
         
         return rt;
     }
+
 }

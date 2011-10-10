@@ -1,4 +1,4 @@
-package com.guntherdw.bukkit.tweakcraft.Commands.General;
+package com.guntherdw.bukkit.tweakcraft.Commands.Custom;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

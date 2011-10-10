@@ -240,4 +240,10 @@ commands:
   stack:
     description: Stacks inventory items.
     usage: /<command>
-    aliases: [ ';' ]
+    aliases: [ ; ]
+  survival:
+    description: Give player access to the survival world.
+    usage: /<command> [player]
+  mail:
+    description: Check your mail.
+    usage: /<command> [inbox|send|outbox|make|append|remove] <args>

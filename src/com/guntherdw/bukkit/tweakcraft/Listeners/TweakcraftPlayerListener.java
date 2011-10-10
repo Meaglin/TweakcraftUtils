@@ -251,16 +251,14 @@ public class TweakcraftPlayerListener extends PlayerListener {
         String displayName = plugin.getNickWithColors(player.getName());
         String ldisplayname = displayName.substring(0, displayName.length()-2);
         player.setDisplayName(displayName);
-        if(ldisplayname.length()<16)
-            player.setListName(ldisplayname);
         if(player.getDisplayName().length() < 16) {
         	try {
-        		player.setPlayerListName(player.getDisplayName());
+        		player.setPlayerListName(ldisplayname);
         	} catch (Exception e) { }
     	}
-        char[] chars = name.toCharArray();
+        char[] chars = message.toCharArray();
         boolean changed = false;
-        for(int i = 0; i < name.length();i++) {
+        for(int i = 0; i < chars.length;i++) {
         	if(chars[i] == '^' && chars.length > (i+1)) {
         		switch(chars[i + 1]) {
         			case '0': case '1': case '2': case '3':
@@ -276,7 +274,10 @@ public class TweakcraftPlayerListener extends PlayerListener {
         		}
         	}
         }
-        if(changed) message = new String(chars);
+        if(changed) {
+        	message = new String(chars);
+        	event.setMessage(message);
+        }
         
         
         ChatHandler ch = plugin.getChathandler();
@@ -422,7 +423,7 @@ public class TweakcraftPlayerListener extends PlayerListener {
         String ldisplayname = displayName.substring(0, displayName.length()-2);
         p.setDisplayName(displayName);
         if(ldisplayname.length()<16)
-            p.setListName(ldisplayname);
+            p.setDisplayName(ldisplayname);
         // p.sendMessage("Ohai thar!");
         for (String m : plugin.getMOTD()) {
             p.sendMessage(m);

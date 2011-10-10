@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.guntherdw.bukkit.tweakcraft.Commands.Teleportation;
+package com.guntherdw.bukkit.tweakcraft.Commands.Custom;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
