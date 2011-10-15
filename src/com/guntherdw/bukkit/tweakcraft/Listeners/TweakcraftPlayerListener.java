@@ -20,13 +20,13 @@ package com.guntherdw.bukkit.tweakcraft.Listeners;
 
 import com.guntherdw.bukkit.tweakcraft.Chat.ChatHandler;
 import com.guntherdw.bukkit.tweakcraft.Chat.ChatMode;
-import com.guntherdw.bukkit.tweakcraft.DataSources.Ban.BanHandler;
+import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.Mail;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerData;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerHistoryInfo;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerInfo;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerOptions;
+import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PunishEntry;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.ChatModeException;
-import com.guntherdw.bukkit.tweakcraft.Packages.Ban;
 import com.guntherdw.bukkit.tweakcraft.TweakcraftUtils;
 import com.guntherdw.bukkit.tweakcraft.Worlds.IWorld;
 import org.bukkit.*;
@@ -65,19 +65,15 @@ public class TweakcraftPlayerListener extends PlayerListener {
 
     public void addNoMountPersistence(String playername) {
         if(plugin.getConfigHandler().enablePersistence) {
-            // PlayerOptions po = new PlayerOptions();
             List<PlayerOptions> popts = plugin.getDatabase().find(PlayerOptions.class).where().ieq("name", playername).ieq("optionname", "nomount").findList();
+            
             if(popts != null && !popts.isEmpty())
                 removeNoMountPersistence(playername);
 
-            // popts = new ArrayList<PlayerOptions>();
             PlayerOptions po = new PlayerOptions();
             po.setName(playername);
             po.setOptionname("nomount");
-            // popts.add(po);
-
-            /* po.setName(playername);
-            po.setOption("nomount"); */
+            
             plugin.getDatabase().save(po);
         }
     }
@@ -226,19 +222,6 @@ public class TweakcraftPlayerListener extends PlayerListener {
                     plugin.getLogger().info("[TweakcraftUtils] Setting "+po.getName()+"'s no-ride option!");
                 nomount.add(po.getName());
             }
-            if(po.getOptionname().equals("mute")) {
-                if(plugin.getConfigHandler().enableDebug)
-                    plugin.getLogger().info("[TweakcraftUtils] Setting "+po.getName()+"'s mute option!");
-                Long toTime = null;
-                try{
-                    if(po.getOptionvalue()!=null) {
-                        toTime = Long.parseLong(po.getOptionvalue());
-                    }
-                } catch (NumberFormatException ex) {
-                    toTime = null;
-                }
-                plugin.getChathandler().updateMute(po.getName(), toTime);
-            }
         }
     }
 
@@ -248,14 +231,8 @@ public class TweakcraftPlayerListener extends PlayerListener {
         Player player = event.getPlayer();
         String message = event.getMessage();
         String name = player.getName();
-        String displayName = plugin.getNickWithColors(player.getName());
-        String ldisplayname = displayName.substring(0, displayName.length()-2);
-        player.setDisplayName(displayName);
-        if(player.getDisplayName().length() < 16) {
-        	try {
-        		player.setPlayerListName(ldisplayname);
-        	} catch (Exception e) { }
-    	}
+        plugin.getPlayerData(player).update(plugin);
+        
         char[] chars = message.toCharArray();
         boolean changed = false;
         for(int i = 0; i < chars.length;i++) {
@@ -283,73 +260,83 @@ public class TweakcraftPlayerListener extends PlayerListener {
         ChatHandler ch = plugin.getChathandler();
         ChatMode cm = ch.getPlayerChatMode(player);
 
-        if (!ch.canTalk(player.getName())) {
-            player.sendMessage(ChatColor.GOLD + "You are muted! No one can hear you.");
-            plugin.getLogger().info("[TweakcraftUtils] Muted player message : <" + event.getPlayer().getName() + "> " + event.getMessage());
-            event.setCancelled(true);
-            return;
-        }
         PlayerData data = plugin.getPlayerData(player);
         if(data.isMuted()) {
         	player.sendMessage(ChatColor.GOLD + data.muteToString());
         	plugin.getLogger().info("[TweakcraftUtils] Muted player message : <" + event.getPlayer().getName() + "> " + event.getMessage());
         	event.setCancelled(true);
         	return;
-        } else {
+        }
 
-            if(plugin.getConfigHandler().enableSpamControl) {
-                int counter = 0;
-                counter = ch.getAntiSpam().checkSpam(player, message);
+        if(plugin.getConfigHandler().enableSpamControl) {
+            int counter = 0;
+            counter = ch.getAntiSpam().checkSpam(player, message);
 
-                if(counter>(plugin.getConfigHandler().spamMaxMessages-1)) {
-                    plugin.getLogger().info("[TweakcraftUtils] "+player.getName()+" has been auto-muted for spamming!");
-                    long until = plugin.getConfigHandler().spamMuteMinutes*60;
-                    ch.addMute(player.getName().toLowerCase(), until);
-                    String msg = plugin.getConfigHandler().spamMuteMessage.trim();
-                    if(!msg.equals("")) {
+            if(counter > (plugin.getConfigHandler().spamMaxMessages-1)) {
+                
+                long until = plugin.getConfigHandler().spamMuteMinutes * 60000 ;
+                data.setMutetime(until + System.currentTimeMillis());
+                PunishEntry entry = new PunishEntry();
+                entry.set("AUTOMUTE", "ANTISPAM", data.getName(), until, "Spamming");
+                plugin.getDatabase().save(entry);
+                
+                player.sendMessage(ChatColor.RED + "You are now auto-muted" + (until > 0 ? " for " + PlayerData.formatRemaining((int) (until/1000)) : "") + " with reason: Spamming!");
+                plugin.getLogger().info("[TweakcraftUtils] ANTISPAM has muted " + data.getName() + " for " + PlayerData.formatRemaining((int) (until/1000)) + " with reason: Spamming!");
+                
+                String msg = plugin.getConfigHandler().spamMuteMessage.trim();
+                if(!msg.equals("")) {
 
-                        msg = msg.replace("{name}", name);
-                        msg = msg.replace("{displayname}", player.getDisplayName());
-                        msg = msg.replace("{mins}", plugin.getConfigHandler().spamMuteMinutes+"");
-                        msg = msg.replace("&&", "{orly}");
-                        msg = msg.replace("&", "§");
-                        msg = msg.replace("{orly}", "&");
+                    msg = msg.replace("{name}", name);
+                    msg = msg.replace("{displayname}", player.getDisplayName());
+                    msg = msg.replace("{mins}", Integer.toString(plugin.getConfigHandler().spamMuteMinutes));
+                    msg = msg.replace("&&", "{orly}");
+                    msg = msg.replace("&", "\u00A7");
+                    msg = msg.replace("{orly}", "&");
 
-                        plugin.getServer().broadcastMessage(msg);
-                    }
+                    plugin.getServer().broadcastMessage(msg);
+                }
+                event.setCancelled(true);
+                return;
+            }
+        }
+        
+        if(plugin.getMailConcepts().containsKey(player.getEntityId())) {
+            Mail mail = plugin.getMailConcepts().get(player.getEntityId());
+            mail.setMessage(mail.getMessage() + "\n" + message);
+            player.sendMessage(ChatColor.GOLD + "Line added to concept mail.");
+            event.setCancelled(true);
+        }
+
+        if (cm != null) {
+            if (!message.startsWith(plugin.getChathandler().getBypassChar())) {
+                cm.sendMessage(player, message);
+                event.setCancelled(true);
+            } else {
+                message = message.substring(1);
+                event.setMessage(message);
+                if(!(message.length()>0)) {
                     event.setCancelled(true);
                     return;
                 }
             }
-
-            if (cm != null) {
-                if (!message.startsWith(plugin.getChathandler().getBypassChar())) {
-                    cm.sendMessage(player, message);
-                    event.setCancelled(true);
-                } else {
-                    message = message.substring(1);
-                    event.setMessage(message);
-                    if(!(message.length()>0)) {
-                        event.setCancelled(true);
-                        return;
-                    }
-                }
-            } else if(cm == null && getInvisplayers().contains(event.getPlayer().getName())) {
-                event.getPlayer().sendMessage(ChatColor.RED + "Are you insane? You're invisible, set a chatmode!");
-                event.setCancelled(true);
-            }
+        } else if(cm == null && getInvisplayers().contains(event.getPlayer().getName())) {
+            event.getPlayer().sendMessage(ChatColor.RED + "Are you insane? You're invisible, set a chatmode!");
+            event.setCancelled(true);
         }
+        
 
         if(!event.isCancelled() && cm==null) {
             // Log nicks!
             if(getNick(name)!=null) {
                 // plugin.getLogger().info("[TweakcraftUtils] "+getNick(name)+" is "+name);
-                event.setCancelled(true);
-                plugin.getLogger().info("("+player.getName()+")  <"+player.getDisplayName()+"> "+message);
+                //event.setCancelled(true);
+                //plugin.getLogger().info("("+player.getName()+")  <"+player.getDisplayName()+"> "+message);
                 /* if(plugin.getConfigHandler().enableIRC && plugin.getCraftIRC()!=null) {
                    plugin.getCraftIRC().sendMessageToTag();
                } */
-                plugin.getServer().broadcastMessage(ChatColor.WHITE+"<"+player.getDisplayName()+ChatColor.WHITE+"> "+message);
+                event.setMessage(message);
+                event.setFormat(ChatColor.WHITE + "<%1$s" + ChatColor.WHITE + "> %2$s");
+                //plugin.getServer().broadcastMessage(ChatColor.WHITE+"<"+player.getDisplayName()+ChatColor.WHITE+"> "+message);
             }
         }
     }
@@ -404,70 +391,44 @@ public class TweakcraftPlayerListener extends PlayerListener {
     		event.disallow(PlayerLoginEvent.Result.KICK_BANNED, data.banToString());
     		return;
     	}
-    	
-        BanHandler handler = plugin.getBanhandler();
-        Ban isBanned = handler.isBannedBan(event.getPlayer().getName());
-        if (isBanned!=null) {
-            event.disallow(PlayerLoginEvent.Result.KICK_BANNED, isBanned.getReason());
-            return;
-        }
-        
-        PlayerData.onLogin(plugin, event.getPlayer(), data);
     }
 
 
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Player p = event.getPlayer();
-        String name = p.getName();
-        String displayName = plugin.getNickWithColors(p.getName());
-        String ldisplayname = displayName.substring(0, displayName.length()-2);
-        p.setDisplayName(displayName);
-        if(ldisplayname.length()<16)
-            p.setDisplayName(ldisplayname);
-        // p.sendMessage("Ohai thar!");
+    	Player player = event.getPlayer();
+    	PlayerData data = plugin.getPlayerData(player);
+    	PlayerData.onLogin(plugin, player, data);
         for (String m : plugin.getMOTD()) {
-            p.sendMessage(m);
+        	player.sendMessage(m);
         }
 
-
-        if(plugin.hasNick(name)) {
-            event.setJoinMessage(ChatColor.YELLOW + getNick(name) + " joined the game.");
+        List<Mail> unread = data.findUnreadMail(plugin);
+        if(unread.size() != 0) {
+            player.sendMessage(ChatColor.GOLD + "You have " + unread.size() + " unread mail's, '/mail inbox' for more info.");
         }
+
+        event.setJoinMessage(ChatColor.YELLOW + player.getDisplayName() + ChatColor.YELLOW + " joined the game.");
 
         if(getInvisplayers().contains(event.getPlayer().getName())) { // Invisible players do not send out a "joined" message
             event.setJoinMessage(null);
-            p.sendMessage(ChatColor.AQUA + "You has joined STEALTHILY!");
-            /* if (plugin.getCraftIRC() != null) {
-                plugin.getCraftIRC().sendMessageToTag("STEALTH JOIN : " +event.getPlayer().getName() ,"mchatadmin");
-            } */
-            /* try {
-                ChatHandler ch = plugin.getChathandler();
-                ChatMode    cm = ch.getChatMode("admin");
-                AdminChat   am = (AdminChat) cm; */
-            for(Player play : plugin.getServer().getOnlinePlayers())
-            {
-                if(plugin.check(play, "tpinvis"))
-                {
+            player.sendMessage(ChatColor.AQUA + "You has joined STEALTHILY!");
+            for(Player play : plugin.getServer().getOnlinePlayers()) {
+                if(plugin.check(play, "tpinvis")) {
                     play.sendMessage(ChatColor.AQUA+"Stealth join : "+event.getPlayer().getDisplayName());
                 }
             }
-            // am.broadcastMessageRealAdmins(ChatColor.AQUA+"Stealth join : "+event.getPlayer().getDisplayName());
-            /* } catch (ChatModeException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-            } */
         }
 
         if(plugin.getConfigHandler().enableCUI) {
-            // String CUIPattern =
-            plugin.sendCUIHandShake(p);
-            plugin.sendCUIChatMode(p);
+            plugin.sendCUIHandShake(player);
+            plugin.sendCUIChatMode(player);
         }
 
         if(plugin.getConfigHandler().enablemod_InfDura) {
-            if(!plugin.getMod_InfDuraplayers().contains(p)) {
-                plugin.sendmod_InfDuraHandshake(p);
+            if(!plugin.getMod_InfDuraplayers().contains(player)) {
+                plugin.sendmod_InfDuraHandshake(player);
             }
-            plugin.sendmod_InfDuraHandshake(p);
+            plugin.sendmod_InfDuraHandshake(player);
         }
     }
 
@@ -516,9 +477,7 @@ public class TweakcraftPlayerListener extends PlayerListener {
 
 
 
-        if(plugin.hasNick(name)) {
-            event.setQuitMessage(ChatColor.YELLOW + getNick(name) + " has left the game.");
-        }
+        event.setQuitMessage(ChatColor.YELLOW + event.getPlayer().getDisplayName() + ChatColor.YELLOW + " has left the game.");
 
         if(getInvisplayers().contains(name)) { // Invisible players do not send out a "left" message
             event.setQuitMessage(null);
@@ -634,8 +593,6 @@ public class TweakcraftPlayerListener extends PlayerListener {
 
     public void onPlayerPortal(PlayerPortalEvent event) {
         if(event.isCancelled()) return;
-
-        Player p = event.getPlayer();
         String fromworld = event.getFrom().getWorld().getName();
         boolean isnether = fromworld.endsWith("_nether");
         if(isnether) fromworld = fromworld.substring(0, fromworld.length()-7); // MINUS _nether
@@ -663,9 +620,6 @@ public class TweakcraftPlayerListener extends PlayerListener {
             // System.out.println("Searching in a "+radius+" radius!");
             agent.setSearchRadius(radius);
             // System.out.println("After travelagent : "+event.getTo());
-
-
-
         }
     }
 

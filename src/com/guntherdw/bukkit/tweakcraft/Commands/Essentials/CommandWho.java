@@ -45,7 +45,6 @@ public class CommandWho implements iCommand {
 
         ArgumentParser ap = new ArgumentParser(realargs);
         String world = ap.getString("w", null);
-        String[] args = ap.getUnusedArgs();
         World w = null;
         
         if(world!=null) {

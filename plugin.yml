@@ -247,3 +247,6 @@ commands:
   mail:
     description: Check your mail.
     usage: /<command> [inbox|send|outbox|make|append|remove] <args>
+  vouch:
+    description: Vouch a player.
+    usage: /<command> [playername]

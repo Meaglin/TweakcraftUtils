@@ -82,6 +82,7 @@ public class CommandExt implements iCommand {
                 sender.sendMessage(ChatColor.YELLOW + "Throwing a bucket of water over every single player!");
                 for (Player play : plugin.getServer().getOnlinePlayers()) {
                     play.setFireTicks(0);
+                    play.sendMessage(ChatColor.GOLD + "You have been extinguished by " + (sender instanceof Player ? ((Player)sender).getDisplayName() : sender.getName()) + ChatColor.GOLD + "."); 
                 }
             }
         } else if (modus == ExtMode.MOBS) {
@@ -157,6 +158,7 @@ public class CommandExt implements iCommand {
             Player player = p.get(0);
             if (player.getFireTicks() != 0) {
                 player.setFireTicks(0);
+                player.sendMessage(ChatColor.GOLD + "You have been extinguished by " + (sender instanceof Player ? ((Player)sender).getDisplayName() : sender.getName()) + ChatColor.GOLD + "."); 
                 sender.sendMessage(player.getDisplayName() + ChatColor.YELLOW + " has been extinguished!");
             } else {
                 sender.sendMessage(player.getDisplayName() + ChatColor.YELLOW + " isn't on fire!");

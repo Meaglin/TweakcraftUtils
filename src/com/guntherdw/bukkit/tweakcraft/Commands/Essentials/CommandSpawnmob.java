@@ -59,7 +59,6 @@ public class CommandSpawnmob implements iCommand {
 
             loc.setY(loc.getY() + 1); // Do not spawn them into the ground, silly!
             String mobName;
-            String mobRider;
             Integer amount = 1;
             String victim = null;
             CreatureType type = null;
@@ -93,7 +92,6 @@ public class CommandSpawnmob implements iCommand {
                 if(args.length > 2) // Riders and/or player!
                 {
                     riders = new ArrayList<CreatureType>();
-                    CreatureType tmpRider;
                     String tmpRiderString;
                     for(int x = 2; x < args.length ; x++) {
 
@@ -128,54 +126,47 @@ public class CommandSpawnmob implements iCommand {
 
                 }
 
-                // if (args.length > 3) // victim!
-                // {
-
-                // }
-
                 // We're finally here
                 // Creature crea = new
                 if(victimplayer == null)
                     victimplayer = player;
                 
-                if (type != null) {
-                    LivingEntity rid = null;
-                    for (int x = 0; x < amount; x++) {
-                        lent = victimplayer.getWorld().spawnCreature(loc, type);
-                        if(health>0)
-                            lent.setHealth(health);
-                        
-                        if(lent instanceof Slime && slimesize > 0)
-                            ((Slime)lent).setSize(slimesize);
+                
+                LivingEntity rid = null;
+                for (int x = 0; x < amount; x++) {
+                    lent = victimplayer.getWorld().spawnCreature(loc, type);
+                    if(health>0)
+                        lent.setHealth(health);
+                    
+                    if(lent instanceof Slime && slimesize > 0)
+                        ((Slime)lent).setSize(slimesize);
 
-                        if(lent instanceof Creeper && powered)
-                            ((Creeper)lent).setPowered(powered);
-                        
-                        if(lent instanceof Sheep && shoven || sheepcolor!=null) {
-                            ((Sheep)lent).setSheared(shoven);
+                    if(lent instanceof Creeper && powered)
+                        ((Creeper)lent).setPowered(powered);
+                    
+                    if(lent instanceof Sheep && shoven || sheepcolor!=null) {
+                        ((Sheep)lent).setSheared(shoven);
 
-                            if(sheepcolor!=null) {
-                                DyeColor dc = null;
-                                if(sheepcolor.equalsIgnoreCase("random")) {
-                                    dc = DyeColor.getByData((byte) rnd.nextInt(16));
-                                } else {
-                                    dc = DyeColor.valueOf(sheepcolor.toUpperCase());
-                                }
-                                if(dc!=null)((Sheep)lent).setColor(dc);
+                        if(sheepcolor!=null) {
+                            DyeColor dc = null;
+                            if(sheepcolor.equalsIgnoreCase("random")) {
+                                dc = DyeColor.getByData((byte) rnd.nextInt(16));
+                            } else {
+                                dc = DyeColor.valueOf(sheepcolor.toUpperCase());
                             }
-                        }
-                        
-                        if(riders != null && riders.size()!=0) {
-                            for(CreatureType t : riders) {
-                                rid = victimplayer.getWorld().spawnCreature(loc, t);
-                                if(lent != null) lent.setPassenger(rid);
-                                lent = rid; // This makes the currently added mob the new "to-ride-along" mob
-                            }
+                            if(dc!=null)((Sheep)lent).setColor(dc);
                         }
                     }
-                } else {
-                    sender.sendMessage(ChatColor.YELLOW + "Error trying to spawn creature!");
+                    
+                    if(riders != null && riders.size()!=0) {
+                        for(CreatureType t : riders) {
+                            rid = victimplayer.getWorld().spawnCreature(loc, t);
+                            if(lent != null) lent.setPassenger(rid);
+                            lent = rid; // This makes the currently added mob the new "to-ride-along" mob
+                        }
+                    }
                 }
+                
             }
         } else {
             throw new CommandSenderException("What were you trying to do? :3");

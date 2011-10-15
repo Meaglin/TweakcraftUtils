@@ -15,7 +15,9 @@ public class Mail {
 	@Id
 	private int id;
 	
+	@NotNull
 	private long sentdate;
+	@NotNull
 	private long readdate;
 
 	@NotNull

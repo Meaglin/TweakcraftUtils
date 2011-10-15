@@ -25,13 +25,13 @@ import com.guntherdw.bukkit.tweakcraft.Chat.ChatMode;
 import com.guntherdw.bukkit.tweakcraft.Commands.CommandHandler;
 import com.guntherdw.bukkit.tweakcraft.Commands.iCommand;
 import com.guntherdw.bukkit.tweakcraft.Configuration.ConfigurationHandler;
-import com.guntherdw.bukkit.tweakcraft.DataSources.Ban.BanHandler;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.Mail;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerData;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerHistoryInfo;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerInfo;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerOptions;
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PunishEntry;
+import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.Vouch;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.*;
 import com.guntherdw.bukkit.tweakcraft.Listeners.TweakcraftEntityListener;
 import com.guntherdw.bukkit.tweakcraft.Listeners.TweakcraftPlayerListener;
@@ -41,6 +41,7 @@ import com.guntherdw.bukkit.tweakcraft.Packages.CraftIRCEndPoint;
 import com.guntherdw.bukkit.tweakcraft.Packages.ItemDB;
 import com.guntherdw.bukkit.tweakcraft.Tools.PermissionsResolver;
 import com.guntherdw.bukkit.tweakcraft.Tools.TamerTool;
+import com.guntherdw.bukkit.tweakcraft.Tools.ZonePermissionsResolver;
 import com.guntherdw.bukkit.tweakcraft.Util.TeleportHistory;
 import com.guntherdw.bukkit.tweakcraft.Worlds.WorldManager;
 import com.guntherdw.bukkit.tweakcraft.request.RequestHandler;
@@ -83,7 +84,6 @@ public class TweakcraftUtils extends JavaPlugin {
     private final TweakcraftEntityListener entityListener = new TweakcraftEntityListener(this);
     private final TweakcraftWorldListener worldListener = new TweakcraftWorldListener(this);
     private final CommandHandler commandHandler = new CommandHandler(this);
-    private final BanHandler banhandler = new BanHandler(this);
     private final ItemDB itemDB = new ItemDB(this);
     private final WorldManager worldmanager = new WorldManager(this);
     private final ConfigurationHandler configHandler = new ConfigurationHandler(this);
@@ -91,11 +91,12 @@ public class TweakcraftUtils extends JavaPlugin {
     private final TamerTool tamertool = new TamerTool(this);
     private final ChatHandler chathandler = new ChatHandler(this);
     
-    private final PermissionsResolver permsResolver = new PermissionsResolver(this);
+    private PermissionsResolver permsResolver = new PermissionsResolver(this);
     
     private final HashMap<String, PlayerData> playerdata = new HashMap<String, PlayerData>();
     private final RequestHandler requestHandler = new RequestHandler(this);
-    private final com.zones.permissions.Permissions	zonePermsResolver = com.zones.permissions.PermissionsResolver.resolve(this);
+    private com.zones.permissions.Permissions zonePermsResolver = null;
+    private final Map<Integer, Mail> mailConcepts = new HashMap<Integer, Mail>();
     
     private Object circendpoint = null;
     private Object circadminendpoint = null;
@@ -248,6 +249,7 @@ public class TweakcraftUtils extends JavaPlugin {
         list.add(PlayerData.class);
         list.add(PunishEntry.class);
         list.add(Mail.class);
+        list.add(Vouch.class);
         return list;
     }
 
@@ -258,6 +260,7 @@ public class TweakcraftUtils extends JavaPlugin {
              getDatabase().find(PlayerData.class).findRowCount();
              getDatabase().find(PunishEntry.class).findRowCount();
              getDatabase().find(Mail.class).findRowCount();
+             getDatabase().find(Vouch.class).findRowCount();
              if(configHandler.useTweakBotSeen)
                  getDatabase().find(PlayerHistoryInfo.class).findRowCount();
          } catch (PersistenceException ex) {
@@ -282,19 +285,6 @@ public class TweakcraftUtils extends JavaPlugin {
         return res;
     }
 
-    private List<String> toList(String str) {
-        List<String> result = new ArrayList<String>();
-        try {
-            String[] names = str.split(",");
-            for (String n : names)
-                result.add(n.trim());
-
-        } catch (NullPointerException e) {
-            // result = new ArrayList<String>();
-        }
-        return result;
-    }
-
     public Player findPlayerasPlayer(String partOfName) {
         // Go for the nicks first!
         Player nick = playerListener.findPlayerByNick(partOfName);
@@ -304,7 +294,6 @@ public class TweakcraftUtils extends JavaPlugin {
                     return p;
             }
         }
-
         // not found, just return partOfName
         return nick;
     }
@@ -335,7 +324,7 @@ public class TweakcraftUtils extends JavaPlugin {
 
     private void registerEvents() {
         getServer().getPluginManager().registerEvent(Event.Type.PLAYER_LOGIN,           playerListener, Priority.High, this);
-        getServer().getPluginManager().registerEvent(Event.Type.PLAYER_JOIN,            playerListener, Priority.Monitor, this);
+        getServer().getPluginManager().registerEvent(Event.Type.PLAYER_JOIN,            playerListener, Priority.Normal, this);
         getServer().getPluginManager().registerEvent(Event.Type.PLAYER_CHAT,            playerListener, Priority.Normal, this);
         getServer().getPluginManager().registerEvent(Event.Type.PLAYER_KICK,            playerListener, Priority.Normal, this);
         getServer().getPluginManager().registerEvent(Event.Type.PLAYER_QUIT,            playerListener, Priority.Normal, this);
@@ -395,24 +384,6 @@ public class TweakcraftUtils extends JavaPlugin {
     public ChatHandler getChathandler() {
         return this.chathandler;
     }
-
-    @Deprecated
-    public static List<String> splitUp(String msg) {
-        int maxlength = 55;
-        List<String> lijst = new ArrayList<String>();
-        String toadd;
-        int x = 0;
-        while (x < msg.length() - maxlength) {
-            toadd = msg.substring(x, x + maxlength);
-            if (!toadd.trim().isEmpty())
-                lijst.add(toadd.trim());
-            x += maxlength;
-        }
-        lijst.add(msg.substring(x));
-
-        return lijst;
-    }
-
     
     public void setupCraftIRC() {
         if(this.getConfigHandler().enableIRC) {
@@ -492,17 +463,11 @@ public class TweakcraftUtils extends JavaPlugin {
     }
 
     public boolean check(Player player, String permNode) {
-        return player.isOp() ||
-               this.permsResolver.hasPermission(player.getWorld().getName(), player, "tweakcraftutils."+permNode);
+        return this.permsResolver.hasPermission(player.getWorld().getName(), player, "tweakcraftutils."+permNode);
     }
 
     public boolean checkfull(Player player, String permNode) {
-        return player.isOp() ||
-               this.permsResolver.hasPermission(player.getWorld().getName(), player, permNode);
-    }
-
-    public BanHandler getBanhandler() {
-        return banhandler;
+        return this.permsResolver.hasPermission(player.getWorld().getName(), player, permNode);
     }
 
     public boolean hasNick(String player) {
@@ -511,7 +476,8 @@ public class TweakcraftUtils extends JavaPlugin {
 
     public void onEnable() {
         pdfFile = this.getDescription();
-
+        zonePermsResolver = com.zones.permissions.PermissionsResolver.resolve(this);
+        permsResolver = new ZonePermissionsResolver(this);
         donottplist = new ArrayList<String>();
         MOTDLines = new ArrayList<String>();
         this.reloadMOTD();
@@ -527,7 +493,6 @@ public class TweakcraftUtils extends JavaPlugin {
 
         itemDB.loadDataBase();
         worldmanager.setupWorlds();
-        banhandler.reloadBans();
 
         if(configHandler.enableIRC) {
             circendpoint = new CraftIRCEndPoint(this);
@@ -586,7 +551,6 @@ public class TweakcraftUtils extends JavaPlugin {
         if (commandHandler.getCommandMap().containsKey(cmd.getName())) {
             try {
                 iCommand command = commandHandler.getCommand(cmd.getName());
-                // public abstract boolean executeCommand(Server server, CommandSender sender, String command, String[] args, TweakcraftUtils plugin);
                 if (!command.executeCommand(sender, cmd.getName(), args, this)) {
                     sender.sendMessage("This command did not go as intended!");
                 }
@@ -669,11 +633,18 @@ public class TweakcraftUtils extends JavaPlugin {
     	return getPlayerData(player, true);
     }
     
-    public void removeData(Player player) {
+    public void forgetData(Player player) {
     	playerdata.remove(player.getName().toLowerCase());
     }
     
     public RequestHandler getRequestHandler() {
     	return requestHandler;
+    }
+
+    /**
+     * @return the mailConcepts
+     */
+    public Map<Integer, Mail> getMailConcepts() {
+        return mailConcepts;
     }
 }

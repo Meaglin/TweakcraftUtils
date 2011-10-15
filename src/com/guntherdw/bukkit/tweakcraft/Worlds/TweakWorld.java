@@ -140,6 +140,7 @@ public class TweakWorld implements IWorld {
         return this.netherenabled;
     }
 
+    @SuppressWarnings("deprecation")
     public void loadWorld(WorldManager wm, String foldername, org.bukkit.World.Environment env, boolean enabled) {
         if (foldername.trim().isEmpty()) {
 
@@ -210,6 +211,7 @@ public class TweakWorld implements IWorld {
         return world.getAllowAnimals();
     }
 
+    @SuppressWarnings("deprecation")
     public void addNether() {
     	if(!enabled)return;
     	

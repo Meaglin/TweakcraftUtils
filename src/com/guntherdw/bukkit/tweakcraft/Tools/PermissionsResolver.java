@@ -51,14 +51,14 @@ public class PermissionsResolver {
     public String getUserPrefix(String world, String player) {
         String prefix = null;
 
-        if     (resolvmode == PermissionResolvingMode.BUKKIT)    prefix = "§f";
-        else if(resolvmode == PermissionResolvingMode.NIJIPERMS) prefix = permshandler.getUserPrefix(world, player);
+        if     (resolvmode == PermissionResolvingMode.BUKKIT)    prefix = "\u00A7f";
         else if(resolvmode == PermissionResolvingMode.PERMISSIONSEX) {
             PermissionUser puser = permsManager.getUser(player);
             if(puser!=null) prefix = puser.getPrefix(world);
         }
+        else if(resolvmode == PermissionResolvingMode.NIJIPERMS) prefix = permshandler.getUserPrefix(world, player);
 
-        return prefix!=null?prefix.replace("&", "§"):null;
+        return prefix!=null?prefix.replace("&", "\u00A7"):null;
 
     }
 
@@ -69,14 +69,14 @@ public class PermissionsResolver {
     public String getUserSuffix(String world, String player) {
         String suffix = null;
 
-        if     (resolvmode == PermissionResolvingMode.BUKKIT)    suffix = "§f";
-        else if(resolvmode == PermissionResolvingMode.NIJIPERMS) suffix = permshandler.getUserSuffix(world, player);
+        if     (resolvmode == PermissionResolvingMode.BUKKIT)    suffix = "\u00A7f";
         else if(resolvmode == PermissionResolvingMode.PERMISSIONSEX) {
             PermissionUser puser = permsManager.getUser(player);
             if(puser!=null) suffix = puser.getSuffix(world);
         }
+        else if(resolvmode == PermissionResolvingMode.NIJIPERMS) suffix = permshandler.getUserSuffix(world, player);
 
-        return suffix!=null?suffix.replace("&", "§"):null;
+        return suffix!=null?suffix.replace("&", "\u00A7"):null;
     }
 
     public boolean inGroup(String group, Player player) {
@@ -93,15 +93,6 @@ public class PermissionsResolver {
             return puser!=null?puser.inGroup(group, world):false;
         } else {
             return permshandler.inGroup(player.getWorld().getName(), player.getName(), group);
-        }
-    }
-
-    public boolean inSingleGroup(String world, String group, Player player) {
-        if(this.resolvmode == PermissionResolvingMode.PERMISSIONSEX) {
-            PermissionUser puser = permsManager.getUser(player);
-            return puser!=null?puser.inGroup(group, world, false):false;
-        } else {
-            return permshandler.inSingleGroup(player.getWorld().getName(), player.getName(), group);
         }
     }
 

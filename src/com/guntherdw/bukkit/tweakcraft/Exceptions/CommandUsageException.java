@@ -22,6 +22,11 @@ package com.guntherdw.bukkit.tweakcraft.Exceptions;
  * @author GuntherDW
  */
 public class CommandUsageException extends Exception {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     public CommandUsageException(String e) {
         super(e);
     }

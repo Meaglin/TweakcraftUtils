@@ -52,7 +52,7 @@ public class CommandClearInventory implements iCommand {
         }
 
         if(victim != null) {
-            sender.sendMessage(ChatColor.YELLOW+"Clearning "+victim.getDisplayName()+ChatColor.YELLOW+"'s inventory!");
+            sender.sendMessage(ChatColor.YELLOW+"Clearing "+victim.getDisplayName()+ChatColor.YELLOW+"'s inventory!");
             victim.getInventory().clear();
         } else {
             sender.sendMessage(ChatColor.RED+"Victim is null, this isn't supposed to happen!");

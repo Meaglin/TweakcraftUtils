@@ -16,11 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package com.guntherdw.bukkit.tweakcraft.Packages;
+package com.guntherdw.bukkit.tweakcraft.unused;
 
 /**
  * @author GuntherDW
  */
+@Deprecated
 public class Ban {
 
     String player;

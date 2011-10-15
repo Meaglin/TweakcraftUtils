@@ -22,6 +22,7 @@ import com.guntherdw.bukkit.tweakcraft.Chat.ChatHandler;
 import com.guntherdw.bukkit.tweakcraft.Chat.ChatMode;
 import com.guntherdw.bukkit.tweakcraft.Chat.Modes.AdminChat;
 import com.guntherdw.bukkit.tweakcraft.Commands.iCommand;
+import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerData;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.*;
 import com.guntherdw.bukkit.tweakcraft.TweakcraftUtils;
 import org.bukkit.ChatColor;
@@ -39,11 +40,14 @@ public class CommandChatMode implements iCommand {
             if(args.length==0) {
                 throw new CommandUsageException("/"+command+" <list|[chatmode]|...>");
             }
-            Player player = (Player) sender;
             ChatHandler ch = plugin.getChathandler();
-            if(!ch.canTalk(player.getName())) {
+
+            Player player = (Player) sender;
+            PlayerData data = plugin.getPlayerData(player);
+            if(data.isMuted()) {
                 throw new CommandException("You can't use this while muted!");
             }
+            
             String chatMode = args[0].toLowerCase();
             String msg = "";
             if(args.length == 1)

@@ -1,9 +1,7 @@
 package com.guntherdw.bukkit.tweakcraft.Commands.Custom;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -20,8 +18,6 @@ import com.guntherdw.bukkit.tweakcraft.Exceptions.CommandUsageException;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.PermissionsException;
 
 public class CommandMail implements iCommand {
-
-	private Map<Integer, Mail> buffer = new HashMap<Integer, Mail>();
 	
 	@SuppressWarnings("deprecation")
 	@Override
@@ -32,8 +28,13 @@ public class CommandMail implements iCommand {
 		if(!(sender instanceof Player))
 			throw new CommandSenderException("Sod off!");
 		
+		Player player = (Player)sender;
+		
+		if(!plugin.check(player, "mail"))
+			throw new PermissionsException("You're not allowed to use this command.");
+		
 		if(args.length == 0) 
-			throw new CommandUsageException("Missing command action, /mail [inbox|read|append|remove|send|outbox] <args>");
+			throw new CommandUsageException("Missing command action, /mail [inbox|read|remove|discard|send|outbox] <args>");
 		
 		PlayerData data = plugin.getPlayerData((Player)sender);
 		
@@ -159,37 +160,23 @@ public class CommandMail implements iCommand {
 			if(to == null)
 				throw new CommandUsageException("No player found with name " + name + ", /mail make [playername] [subject]");
 			
-			buffer.put(((Player)sender).getEntityId(), new Mail(data, to, subject, ""));
+			plugin.getMailConcepts().put(((Player)sender).getEntityId(), new Mail(data, to, subject, ""));
 			sender.sendMessage(ChatColor.GOLD + "New mail, To:" + ChatColor.WHITE + to.getName() + ChatColor.GOLD + " Subject:" + ChatColor.WHITE + subject);
+			sender.sendMessage(ChatColor.GOLD + "Use your chat to add text to the concept mail, to send: /mail send");
 			
 		} else if(action.equals("send")) {
-			Mail mail = buffer.get(((Player)sender).getEntityId());
+			Mail mail = plugin.getMailConcepts().get(((Player)sender).getEntityId());
 			if(mail == null)
 				throw new CommandUsageException("Please setup a mail first, /mail make [playername] [subject]");
 			
 			if(mail.getMessage().trim().equals(""))
-				throw new CommandUsageException("You cannot send an empty message, /mail append [text]");
+				throw new CommandUsageException("You cannot send an empty message, please type some text first.");
 			
 			mail.setSentdate(System.currentTimeMillis());
 			plugin.getDatabase().save(mail);
-			buffer.remove(((Player)sender).getEntityId());
-		} else if(action.equals("append")) {
-			Mail mail = buffer.get(((Player)sender).getEntityId());
-			if(mail == null)
-				throw new CommandUsageException("Please setup a mail first, /mail make [playername] [subject]");
-			
-			if(args.length < 2)
-				throw new CommandUsageException("Missing text, /mail append [text]");
-			
-			String text = "";
-			for(int i = 1; i < args.length; i++)
-				text += " " + args[i];
-			if(text.length() > 1) text = text.substring(1);
-			
-			mail.setMessage(mail.getMessage() + text + "\n");
-			sender.sendMessage(ChatColor.GOLD + "Added line:" + ChatColor.WHITE + text);
+			plugin.getMailConcepts().remove(((Player)sender).getEntityId());
 		} else if(action.equals("remove")) {
-			Mail mail = buffer.get(((Player)sender).getEntityId());
+			Mail mail = plugin.getMailConcepts().get(((Player)sender).getEntityId());
 			if(mail == null)
 				throw new CommandUsageException("Please setup a mail first, /mail make [playername] [subject]");
 			
@@ -220,6 +207,13 @@ public class CommandMail implements iCommand {
 			}
 			mail.setMessage(newmessage);
 			sender.sendMessage(ChatColor.GOLD + "Line removed:" + ChatColor.WHITE + removed);
+		} else if(action.equals("discard")) {
+			Mail mail = plugin.getMailConcepts().get(((Player)sender).getEntityId());
+			if(mail == null)
+				throw new CommandException("No concept mail to delete.");
+			
+			plugin.getMailConcepts().remove(((Player)sender).getEntityId());
+			sender.sendMessage(ChatColor.GOLD + "Concept succesfully deleted.");
 		}
 		return true;
 	}

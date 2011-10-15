@@ -21,7 +21,6 @@ package com.guntherdw.bukkit.tweakcraft.Configuration;
 import com.guntherdw.bukkit.tweakcraft.Packages.LockdownLocation;
 import com.guntherdw.bukkit.tweakcraft.Tools.PermissionsResolver;
 import com.guntherdw.bukkit.tweakcraft.TweakcraftUtils;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.util.config.Configuration;
 
@@ -41,8 +40,6 @@ public class ConfigurationHandler {
     private Configuration seenconfig;
     private Map<String, Map<Integer, Boolean>> lsbindmap;
     private Map<String, LockdownLocation> lockdowns;
-    private Map<String, List<Location>> tpfromlocations;
-
     /**
      * Defaults
      */

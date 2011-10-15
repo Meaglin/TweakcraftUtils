@@ -16,10 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package com.guntherdw.bukkit.tweakcraft.DataSources.Ban;
+package com.guntherdw.bukkit.tweakcraft.unused;
 
 import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerOptions;
-import com.guntherdw.bukkit.tweakcraft.Packages.Ban;
 import com.guntherdw.bukkit.tweakcraft.TweakcraftUtils;
 import com.guntherdw.bukkit.tweakcraft.Util.TimeTool;
 
@@ -30,6 +29,7 @@ import java.util.*;
 /**
  * @author GuntherDW
  */
+@Deprecated
 public class BanHandler {
 
     private Map<String, Ban> bans;

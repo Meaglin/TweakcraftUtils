@@ -22,6 +22,11 @@ package com.guntherdw.bukkit.tweakcraft.Exceptions;
  * @author GuntherDW
  */
 public class PermissionsException extends Exception {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     public PermissionsException(String e) {
         super(e);
     }

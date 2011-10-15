@@ -41,8 +41,6 @@ public class CommandTpList implements iCommand {
 
         if (plugin.getDonottplist().size() != 0) {
             sender.sendMessage(ChatColor.YELLOW + "Current do-not-tp list : ");
-            String color = "";
-            String msg = "";
             for (String playername : plugin.getDonottplist()) {
                 Player tpp = plugin.getServer().getPlayer(playername);
                 if (tpp != null) {

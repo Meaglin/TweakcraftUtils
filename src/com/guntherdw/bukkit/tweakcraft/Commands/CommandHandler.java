@@ -33,6 +33,7 @@ import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandTpcHere;
 import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandUnMute;
 import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandUnPunish;
 import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandUnban;
+import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandVouch;
 import com.guntherdw.bukkit.tweakcraft.Commands.Custom.CommandWarn;
 import com.guntherdw.bukkit.tweakcraft.Commands.Debug.CommandDebug;
 import com.guntherdw.bukkit.tweakcraft.Commands.Essentials.*;
@@ -161,6 +162,7 @@ public class CommandHandler {
         commandMap.put("unban", 	new CommandUnban());
         commandMap.put("unmute", 	new CommandUnMute());
         commandMap.put("unpunish", 	new CommandUnPunish());
+        commandMap.put("vouch",  	new CommandVouch());
         commandMap.put("warn", 		new CommandWarn());
     }
 

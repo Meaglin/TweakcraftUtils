@@ -22,6 +22,11 @@ package com.guntherdw.bukkit.tweakcraft.Exceptions;
  * @author GuntherDW
  */
 public class CommandSenderException extends Exception {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     public CommandSenderException(String e) {
         super(e);
     }

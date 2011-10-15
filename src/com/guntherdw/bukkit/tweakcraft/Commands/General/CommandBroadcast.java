@@ -53,7 +53,7 @@ public class CommandBroadcast implements iCommand {
             groups = grouparg.split(",");
             for(String gr : groups) {
                 for(Player p : plugin.getServer().getOnlinePlayers()) {
-                    if(plugin.getPermissionsResolver().inSingleGroup("world", gr, p)) {
+                    if(plugin.getPermissionsResolver().inGroup("world", gr, p)) {
                         if(!recipients.contains(p))
                             recipients.add(p);
                     }
@@ -85,7 +85,7 @@ public class CommandBroadcast implements iCommand {
                 
                 // plugin.getCraftIRC(). ("[Broadcast] "+message, tag);
                 RelayedMessage rm = plugin.getCraftIRC().newMsgToTag(plugin.getEndPoint(), plugin.getConfigHandler().GIRCtag, "generic");
-                rm.setField("message", "[Broadcast] "+message);
+                rm.setField("message", ChatColor.RED + "[" + ChatColor.GREEN + "Broadcast" + ChatColor.RED + "] " + ChatColor.GREEN + message);
                 rm.post();
             }
         }

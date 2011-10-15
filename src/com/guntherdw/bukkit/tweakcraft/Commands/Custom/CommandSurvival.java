@@ -24,15 +24,15 @@ public class CommandSurvival implements iCommand {
 		Player player = plugin.getServer().getPlayer(args[0]);
 		if(player == null) throw new CommandException("No player found with name " + args[0] + "!");
 		
-		if(plugin.getP().getGroup(player, "survival") == null) {
+		if(!plugin.getP().canUse(player, "world", "tweakcraftutils.worlds.survival")) {
 			plugin.getP().addPermission(player, "world", "tweakcraftutils.worlds.survival");
 			plugin.getP().addPermission(player, "world", "tweakcraftutils.worlds.survival.world");
-			plugin.getP().addGroup(player, "survival", plugin.getP().getGroup(player, "world"));
+			//plugin.getP().addGroup(player, "survival", plugin.getP().getGroup(player, "world"));
 			sender.sendMessage(ChatColor.GOLD + "Given player " + player.getDisplayName() + ChatColor.GOLD + " survival access!");
 		} else {
 			plugin.getP().removePermission(player, "world", "tweakcraftutils.worlds.survival");
 			plugin.getP().removePermission(player, "world", "tweakcraftutils.worlds.survival.world");
-			plugin.getP().setGroup(player, "survival", null);
+			//plugin.getP().setGroup(player, "survival", null);
 			sender.sendMessage(ChatColor.GOLD + "Removed players " + player.getDisplayName() + ChatColor.GOLD + " survival access!");
 		}
 		/*

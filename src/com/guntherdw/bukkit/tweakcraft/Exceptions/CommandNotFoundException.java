@@ -22,6 +22,11 @@ package com.guntherdw.bukkit.tweakcraft.Exceptions;
  * @author GuntherDW
  */
 public class CommandNotFoundException extends Exception {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     public CommandNotFoundException(String e) {
         super(e);
     }

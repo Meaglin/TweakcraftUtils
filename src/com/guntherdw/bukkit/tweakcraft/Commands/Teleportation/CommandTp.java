@@ -43,8 +43,6 @@ public class CommandTp implements iCommand {
         ArgumentParser ap = new ArgumentParser(realargs);
         String p1 = ap.getString("p", null);
         if(p1==null) p1 = ap.getString("f", null);
-        String p2 = ap.getString("t", null);
-
         String[] args = ap.getNormalArgs();
 
         if (sender instanceof Player) {

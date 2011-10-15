@@ -65,7 +65,6 @@ public class CommandWorld implements iCommand {
                     else {
                         Location oldlocation = player.getLocation();
                         Location toLocation = world.getSpawnLocation();
-                        String locString = "";
                         plugin.getTelehistory().addHistory(player.getName(), oldlocation);
                         if(plugin.getConfigHandler().enablePersistence) {
                             List<PlayerOptions> plist = plugin.getDatabase().find(PlayerOptions.class).where().ieq("name", player.getName()).ieq("optionname", "worldpos").findList();

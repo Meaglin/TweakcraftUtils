@@ -22,6 +22,11 @@ package com.guntherdw.bukkit.tweakcraft.Exceptions;
  * @author GuntherDW
  */
 public class ChatModeException extends Exception {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+
     public ChatModeException(String e) {
         super(e);
     }

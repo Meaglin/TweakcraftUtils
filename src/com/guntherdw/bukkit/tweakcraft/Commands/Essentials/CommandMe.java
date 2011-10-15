@@ -22,6 +22,7 @@ import com.guntherdw.bukkit.tweakcraft.Chat.ChatHandler;
 import com.guntherdw.bukkit.tweakcraft.Chat.ChatMode;
 import com.guntherdw.bukkit.tweakcraft.Chat.Modes.AdminChat;
 import com.guntherdw.bukkit.tweakcraft.Commands.iCommand;
+import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerData;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.CommandException;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.CommandSenderException;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.CommandUsageException;
@@ -40,7 +41,8 @@ public class CommandMe implements iCommand {
         if (sender instanceof Player) {
             Player player = (Player) sender;
             ChatHandler ch = plugin.getChathandler();
-            if (!ch.canTalk(player.getName())) {
+            PlayerData data = plugin.getPlayerData(player);
+            if (data.isMuted()) {
                 sender.sendMessage(ChatColor.RED + "What were you trying to do?");
             } else {
                 if (args.length > 0) {

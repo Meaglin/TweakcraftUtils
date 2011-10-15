@@ -20,7 +20,6 @@ package com.guntherdw.bukkit.tweakcraft.Chat;
 
 import com.guntherdw.bukkit.tweakcraft.Configuration.ConfigurationHandler;
 import com.guntherdw.bukkit.tweakcraft.Packages.LocalPlayer;
-import com.guntherdw.bukkit.tweakcraft.TweakcraftUtils;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -32,17 +31,13 @@ import java.util.Map;
 public class AntiSpam {
 
     private ChatHandler ch;
-    private ConfigurationHandler config;
     private Map<String, LocalPlayer> playerlist;
     private long watchtime;
-    private int muteminutes;
 
     public AntiSpam(ChatHandler instance, ConfigurationHandler config) {
         this.ch = instance;
-        this.config = config;
         this.playerlist = new HashMap<String, LocalPlayer>();
         this.watchtime = config.spamCheckTime;
-        this.muteminutes = config.spamMuteMinutes;
     }
 
     public int checkSpam(Player player, String message) {

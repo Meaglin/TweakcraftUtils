@@ -21,7 +21,6 @@ package com.guntherdw.bukkit.tweakcraft.Packages;
 import com.ensifera.animosity.craftirc.CraftIRC;
 import com.ensifera.animosity.craftirc.EndPoint;
 import com.ensifera.animosity.craftirc.RelayedMessage;
-import com.guntherdw.bukkit.tweakcraft.Chat.ChatHandler;
 import com.guntherdw.bukkit.tweakcraft.TweakcraftUtils;
 
 import java.util.List;
@@ -31,18 +30,16 @@ import java.util.List;
  */
 public class CraftIRCEndPoint implements EndPoint {
     
-    private ChatHandler ch = null;
     private CraftIRC circ = null;
     
     public CraftIRCEndPoint(TweakcraftUtils instance) {
-        this.ch = instance.getChathandler();
         this.circ = instance.getCraftIRC();
         circ.registerEndPoint("tcutils", this);
     }
     
     @Override
     public Type getType() {
-        return EndPoint.Type.IRC;
+        return EndPoint.Type.MINECRAFT;
     }
 
     @Override

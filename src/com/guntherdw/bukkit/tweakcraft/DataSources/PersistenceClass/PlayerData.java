@@ -1,5 +1,7 @@
 package com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass;
 
+import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -7,6 +9,7 @@ import javax.persistence.Table;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
+import com.avaje.ebean.ExpressionList;
 import com.avaje.ebean.validation.Length;
 import com.avaje.ebean.validation.NotNull;
 import com.guntherdw.bukkit.tweakcraft.TweakcraftUtils;
@@ -101,7 +104,7 @@ public class PlayerData {
 		if(player == null) return;
 		player.setDisplayName(plugin.getNickWithColors("world", player.getName()));
 		String displayname = player.getDisplayName().substring(0, player.getDisplayName().length()-2);
-		if(displayname.length() < 16) {
+		if(displayname.length() <= 16) {
         	try {
         		player.setPlayerListName(displayname);
         	} catch (Exception e) { }
@@ -109,14 +112,15 @@ public class PlayerData {
 		setDisplayname(player.getDisplayName());
 		
 		if (getDemotetime() != 0 && getDemotetime() > 0 && getDemotetime() <= System.currentTimeMillis()) {
-			plugin.getP().removeGroup(player, "world", "outcast");
-			plugin.getP().addGroup(player, "world", getOldrank());
+			//plugin.getP().removeGroup(player, "world", "outcast");
+			plugin.getP().setGroup(player, "world", getOldrank());
 			setDemotetime(0);
 			setLastrank(getOldrank());
 			setOldrank("");
 			player.sendMessage(ChatColor.GREEN + "You are not outcast more!");
 		}
-		
+		if(getMutetime() != -1 && getMutetime() < System.currentTimeMillis()) setMutetime(0);
+		if(getBantime() != -1 && getBantime() < System.currentTimeMillis()) setBantime(0);
 		setLastrank(plugin.getP().getGroup(player, "world"));
 		if(save) plugin.getDatabase().update(this);
 	}
@@ -131,16 +135,35 @@ public class PlayerData {
 		
 		data.setOnline(true);
 		data.setLastlogin(System.currentTimeMillis());
-		if(data.getMutetime() != -1 && data.getMutetime() < System.currentTimeMillis()) data.setMutetime(0);
-		if(data.getBantime() != -1 && data.getBantime() < System.currentTimeMillis()) data.setBantime(0);
 		plugin.getDatabase().update(data); 
 	}
 	
 	public static void onLogout(TweakcraftUtils plugin, Player player, PlayerData data) {
+		data.update(plugin, false);
+		
 		data.setOnlinetime(data.getOnlinetime() + (System.currentTimeMillis() - data.getLastlogin()));
         data.setOnline(false);
         data.setLastlogin(System.currentTimeMillis());
         plugin.getDatabase().update(data);
+	}
+	
+	public Vouch findVouch(TweakcraftUtils plugin) {
+		return plugin.getDatabase().find(Vouch.class).where().eq("vouchreceiverid", getId()).findUnique();
+	}
+	
+	public List<Mail> findUnreadMail(TweakcraftUtils plugin) {
+	    ExpressionList<Mail> ex = plugin.getDatabase().find(Mail.class).where();
+        ex.eq("senderid",getId());
+        ex.orderBy().desc("sentdate");
+        ex.eq("readdate", 0);
+        return ex.findList();
+	}
+	
+	public List<Mail> findMail(TweakcraftUtils plugin) {
+	    ExpressionList<Mail> ex = plugin.getDatabase().find(Mail.class).where();
+        ex.eq("senderid",getId());
+        ex.orderBy().desc("sentdate");
+        return ex.findList();
 	}
 	
 	/**
@@ -354,7 +377,8 @@ public class PlayerData {
         seconds = remainingtime;
         String rt = "";
         
-        if(weeks != 0) rt += (weeks == 1 ? "1 day, " : weeks + " days, ");
+        if(weeks != 0) rt += (weeks == 1 ? "1 week, " : weeks + " weeks, ");
+        if(days != 0) rt += (days == 1 ? "1 day, " : days + " days, ");
         if(hours != 0) rt += (hours == 1 ? "1 hour, " : hours + " hours, ");
         if(minutes != 0) rt += (minutes == 1 ? "1 minute, " : minutes + " minutes, ");
         if(seconds != 0){

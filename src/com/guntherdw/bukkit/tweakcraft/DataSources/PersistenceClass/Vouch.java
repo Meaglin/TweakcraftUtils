@@ -1,6 +1,7 @@
 package com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Table;
 
 import com.avaje.ebean.validation.NotEmpty;
@@ -9,8 +10,10 @@ import com.avaje.ebean.validation.NotNull;
 @Entity
 @Table( name = "vouches" )
 public class Vouch {
+	@Id
 	private int id;
 	
+	@NotNull
 	private long vouchdate;
 	
 	@NotNull

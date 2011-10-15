@@ -32,7 +32,6 @@ public class WorldManager {
 
     private Map<String, IWorld> worlds;
     private TweakcraftUtils plugin;
-    private int defaultViewDistance;
 
     public Map<String, IWorld> getWorlds() {
         return worlds;

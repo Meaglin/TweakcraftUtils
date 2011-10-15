@@ -76,6 +76,7 @@ public class CommandIgnite implements iCommand {
                 sender.sendMessage(ChatColor.YELLOW + "Is it hot in here or is it just me?");
                 for (Player play : plugin.getServer().getOnlinePlayers()) {
                     play.setFireTicks(300);
+                    play.sendMessage(ChatColor.GOLD + "You have been ignited by " + (sender instanceof Player ? ((Player)sender).getDisplayName() : sender.getName()) + ChatColor.GOLD + ".");
                 }
             }
         } else if (modus == IgniteMode.MOBS) {
@@ -163,6 +164,7 @@ public class CommandIgnite implements iCommand {
             }
             Player player = p.get(0);
             player.setFireTicks(1500);
+            player.sendMessage(ChatColor.GOLD + "You have been ignited by " + (sender instanceof Player ? ((Player)sender).getDisplayName() : sender.getName()) + ChatColor.GOLD + ".");
             sender.sendMessage(player.getDisplayName() + ChatColor.YELLOW + " has been ignited!");
         }
         return true;

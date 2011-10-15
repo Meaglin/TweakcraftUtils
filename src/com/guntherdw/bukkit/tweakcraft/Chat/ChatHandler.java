@@ -19,8 +19,6 @@
 package com.guntherdw.bukkit.tweakcraft.Chat;
 
 import com.guntherdw.bukkit.tweakcraft.Chat.Modes.*;
-import com.guntherdw.bukkit.tweakcraft.Configuration.ConfigurationHandler;
-import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerOptions;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.ChatModeException;
 import com.guntherdw.bukkit.tweakcraft.TweakcraftUtils;
 import org.bukkit.entity.Player;
@@ -36,7 +34,6 @@ public class ChatHandler {
     private AntiSpam antispam = null;
     public Map<String, ChatMode> chatmodes = new HashMap<String, ChatMode>();
     public Map<String, String> playerchatmode = new HashMap<String, String>();
-    public Map<String, Long> mutedPlayers = new HashMap<String, Long>();
     
 
     public ChatHandler(TweakcraftUtils instance) {
@@ -130,83 +127,8 @@ public class ChatHandler {
         }
     }
 
-    public void addMute(String player) {
-        addMute(player, null);
-    }
-
-    public void updateMute(String player, Long toTime) {
-        mutedPlayers.put(player, toTime);
-    }
-
     public AntiSpam getAntiSpam() {
         return this.antispam;
     }
 
-    public void addMute(String player, Long duration) {
-        Long toTime = null;
-        
-        if(player!=null) player = player.toLowerCase(); /* Sanity checks */
-        else return;
-
-        if(duration != null) {
-            toTime  = Calendar.getInstance().getTime().getTime();
-            toTime += duration*1000;
-        }
-        if(plugin.getConfigHandler().enablePersistence) {
-            PlayerOptions po = plugin.getDatabase().find(PlayerOptions.class).where().ieq("name", player).ieq("optionname", "mute").findUnique();
-            if(po==null) {
-                po = new PlayerOptions();
-                po.setName(player);
-                po.setOptionname("mute");
-            }
-            
-            po.setOptionvalue(toTime==null?null:toTime.toString());
-            plugin.getDatabase().save(po);
-        }
-        mutedPlayers.put(player, toTime);
-    }
-
-    public boolean canTalk(String player) {
-        if(mutedPlayers.containsKey(player.toLowerCase())) {
-            Long checktime = Calendar.getInstance().getTime().getTime();
-            Long muteTime = mutedPlayers.get(player.toLowerCase());
-            if(muteTime == null || checktime < muteTime) {
-                return false;
-            }
-            if(checktime > muteTime) {
-                if(plugin.getConfigHandler().enableDebug)
-                    plugin.getLogger().info("[TweakcraftUtils] Mutes: auto-unmuting "+player+", his mutetime was over!");
-                removeMute(player);
-            }
-        }
-        return true;
-    }
-
-    public void removeMute(String player) {
-        if (mutedPlayers.containsKey(player)) {
-            mutedPlayers.remove(player);
-        }
-        if(plugin.getConfigHandler().enablePersistence) {
-            PlayerOptions po = plugin.getDatabase().find(PlayerOptions.class).where().ieq("name", player).ieq("optionname", "mute").findUnique();
-            if(po!=null)
-                plugin.getDatabase().delete(po);
-        }
-    }
-
-    public Map<String, Long> getMutedPlayers() {
-        return mutedPlayers;
-    }
-
-    public Long getRemaining(String player) {
-        if(canTalk(player)) return null;
-        Long remain = mutedPlayers.get(player);
-        if(remain == null) return null;
-        Long checktime = Calendar.getInstance().getTime().getTime();
-        Double dres = Math.floor((remain - checktime)/1000);
-        return dres.longValue();
-    }
-
-    public boolean isMuted(String playername) {
-        return mutedPlayers.containsKey(playername.toLowerCase());
-    }
 }

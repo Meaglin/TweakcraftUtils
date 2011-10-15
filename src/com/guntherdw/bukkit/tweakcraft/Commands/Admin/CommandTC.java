@@ -19,7 +19,7 @@
 package com.guntherdw.bukkit.tweakcraft.Commands.Admin;
 
 import com.guntherdw.bukkit.tweakcraft.Commands.iCommand;
-import com.guntherdw.bukkit.tweakcraft.DataSources.Ban.BanHandler;
+import com.guntherdw.bukkit.tweakcraft.DataSources.PersistenceClass.PlayerData;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.CommandException;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.CommandSenderException;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.CommandUsageException;
@@ -57,18 +57,11 @@ public class CommandTC implements iCommand {
 
                 sender.sendMessage(ChatColor.GREEN + "Reloading settings,dbs and setting colors.");
                 plugin.getConfigHandler().reloadConfig();
-                BanHandler bh = plugin.getBanhandler();
-                bh.reloadBans();
                 ItemDB idb = plugin.getItemDB();
                 idb.loadDataBase();
                 for (Player p : plugin.getServer().getOnlinePlayers()) {
-                    String name = p.getName();
-                    // p.setDisplayName(plugin.getPlayerColor(name, false) + name + ChatColor.WHITE);
-                    String displayName = plugin.getNickWithColors(p.getName());
-                    String ldisplayname = displayName.substring(0, displayName.length()-2);
-                    p.setDisplayName(displayName);
-                    if(ldisplayname.length()<16)
-                        p.setPlayerListName(ldisplayname);
+                    PlayerData.onLogout(plugin, p, plugin.getPlayerData(p));
+                    PlayerData.onLogin(plugin, p, plugin.getPlayerData(p));
                 }
                 plugin.getPlayerListener().reloadInvisTable();
                 /**

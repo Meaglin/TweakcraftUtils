@@ -22,7 +22,6 @@ import com.ensifera.animosity.craftirc.CraftIRC;
 import com.ensifera.animosity.craftirc.EndPoint;
 import com.ensifera.animosity.craftirc.RelayedMessage;
 import com.guntherdw.bukkit.tweakcraft.Chat.ChatHandler;
-import com.guntherdw.bukkit.tweakcraft.Chat.ChatMode;
 import com.guntherdw.bukkit.tweakcraft.Chat.Modes.AdminChat;
 import com.guntherdw.bukkit.tweakcraft.Exceptions.ChatModeException;
 import com.guntherdw.bukkit.tweakcraft.TweakcraftUtils;
@@ -39,7 +38,6 @@ public class CraftIRCAdminEndPoint implements EndPoint {
 
     private TweakcraftUtils plugin = null;
     private ChatHandler ch = null;
-    private ChatMode cm = null;
     private AdminChat ac = null;
     private CraftIRC circ = null;
 
